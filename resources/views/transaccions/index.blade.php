@@ -1,14 +1,55 @@
 @extends('layouts.transaccions')
 @section('content')
 <div class="container mt-3">
-    <h3>TRANSACCIONES</h3>
+    <h3 class="mb-3">TRANSACCIONES</h3>
 
-    <form method="POST" action="{{ @route('transaccion.store') }}" class="d-inline-flex mb-4" enctype="multipart/form-data">
+    <form method="POST" action="{{ @route('transaccion.store') }}" class="d-inline-flex mb-3" enctype="multipart/form-data">
         @csrf
         <div class="input-group">
             <input type="file" name="transaccion_file" class="form-control" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04" aria-label="Upload" accept=".xls,.xlsx,.csv" required>
             <button class="btn btn-outline-success" type="submit" id="inputGroupFileAddon04">SUBIR</button>
         </div>
+    </form>
+
+    <a class="ml-1 mb-3" href="/files/transacciones/plantilla.xls" target="_blank">Descargar plantilla de Ejemplo</a>
+
+    <form class="w-100 d-flex flex-wrap mb-3">
+        <div class="form-floating mb-1 mr-2">
+            <input type="text" class="form-control" id="numero_de_cuenta" name="numero_de_cuenta" placeholder="" value="{{request('numero_de_cuenta')}}">
+            <label for="numero_de_cuenta">Número de Cuenta</label>
+        </div>
+
+        <div class="form-floating mb-1 mr-2">
+            <input type="text" class="form-control" id="codigo_de_banco" name="codigo_de_banco" placeholder="" value="{{request('codigo_de_banco')}}">
+            <label for="codigo_de_banco">Código de Banco</label>
+        </div>
+
+        <div class="form-floating mr-2">
+            <select class="form-select" id="tipo_de_cuenta" name="tipo_de_cuenta" aria-label="Floating label select example">
+                <option {{request('tipo_de_cuenta') ? '' : 'selected'}} disabled>-Seleccione-</option>
+                <option value="CC" {{request('tipo_de_cuenta')=='CC' ? 'selected' : ''}}>CC</option>
+                <option value="CA" {{request('tipo_de_cuenta')=='CA' ? 'selected' : ''}}>CA</option>
+                <option value="TJ" {{request('tipo_de_cuenta')=='TJ' ? 'selected' : ''}}>TJ</option>
+                <option value="PR" {{request('tipo_de_cuenta')=='PR' ? 'selected' : ''}}>PR</option>
+            </select>
+            <label for="tipo_de_cuenta">Tipo de Cuenta</label>
+        </div>
+
+        <div class="form-floating mb-1 mr-2">
+            <input type="text" class="form-control" id="nombre_del_cliente" name="nombre_del_cliente" placeholder="" value="{{request('nombre_del_cliente')}}">
+            <label for="nombre_del_cliente">Nombre del Cliente</label>
+        </div>
+
+        <div class="form-floating mr-2">
+            <select class="form-select" id="tipo_de_movimiento" name="tipo_de_movimiento" aria-label="Floating label select example" style="min-width: 200px;">
+                <option {{request('tipo_de_movimiento') ? '' : 'selected'}} disabled>-Seleccione-</option>
+                <option value="D" {{request('tipo_de_movimiento')=='D' ? 'selected' : ''}}>Débito</option>
+                <option value="C" {{request('tipo_de_movimiento')=='C' ? 'selected' : ''}}>Crédito</option>
+            </select>
+            <label for="tipo_de_movimiento">Tipo de Movimiento</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Buscar</button>
     </form>
 
     @if(sizeof($transaccions)>0)
@@ -65,5 +106,9 @@
             </tbody>
         </table>
     </div>
+
+    <div class="d-flex justify-content-center">
+        {{ $transaccions->links('pagination::bootstrap-5') }}
+    </div> 
 </div>
 @endsection

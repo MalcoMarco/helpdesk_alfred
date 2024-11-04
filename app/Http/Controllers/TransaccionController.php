@@ -9,6 +9,7 @@ use App\Imports\TransaccionsImport;
 use App\Models\Transaccion;
 use Illuminate\Validation\ValidationException;
 use App\Exports\TransaccionsExport;
+use Illuminate\Validation\Rule;
 
 class TransaccionController extends Controller
 {
@@ -27,7 +28,55 @@ class TransaccionController extends Controller
 
     public function index(Request $request)
     {
-        $transaccions = Transaccion::all();
+        $this->validate($request, [
+            'numero_de_cuenta' => ['nullable', 'string'],
+            'codigo_de_banco' => ['nullable', 'string'],
+            'tipo_de_cuenta' => ['nullable', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
+            'nombre_del_cliente' => ['nullable', 'string'],
+            'tipo_de_movimiento' => ['nullable', Rule::in(['D', 'C'])],
+            //'monto_de_transaccion' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
+            'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+        ]);
+
+        $transaccions = Transaccion::where('id', '>=', 1);
+
+        if (isset($request->numero_de_cuenta)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('num_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
+            });
+        }
+
+        if (isset($request->codigo_de_banco)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('codigo_banco', 'LIKE', '%'.$request->codigo_de_banco.'%');
+            });
+        }
+
+        if (isset($request->tipo_de_cuenta)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('tipo_cuenta', 'LIKE', '%'.$request->tipo_de_cuenta.'%');
+            });
+        }
+
+        if (isset($request->nombre_del_cliente)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('nombre_cliente', 'LIKE', '%'.$request->nombre_del_cliente.'%');
+            });
+        }
+
+        if (isset($request->tipo_de_movimiento)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('tipo_movimiento', 'LIKE', '%'.$request->tipo_de_movimiento.'%');
+            });
+        }
+
+        if (isset($request->numero_de_referencia)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('referencia', 'LIKE', '%'.$request->numero_de_referencia.'%');
+            });
+        }
+
+        $transaccions = $transaccions->paginate(50);
 
         return view('transaccions.index', compact('transaccions'));
     }

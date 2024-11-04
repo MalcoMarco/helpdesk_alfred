@@ -19,7 +19,7 @@ class TransaccionController extends Controller
         $this->middleware('auth');
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
-            if ($user->role_id != 1) {
+            if ($user->role->slug != 'admin') {
                 abort(403);
             }
             return $next($request);

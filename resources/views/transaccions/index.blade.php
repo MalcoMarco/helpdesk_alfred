@@ -24,7 +24,7 @@
             <label for="codigo_de_banco">Código de Banco</label>
         </div>
 
-        <div class="form-floating mr-2">
+        <div class="form-floating mr-2 mb-1">
             <select class="form-select" id="tipo_de_cuenta" name="tipo_de_cuenta" aria-label="Floating label select example">
                 <option value="" {{request('tipo_de_cuenta') ? '' : 'selected'}}>-Ninguno-</option>
                 <option value="CC" {{request('tipo_de_cuenta')=='CC' ? 'selected' : ''}}>CC</option>
@@ -49,6 +49,16 @@
             <label for="tipo_de_movimiento">Tipo de Movimiento</label>
         </div>
 
+        <div class="form-floating mr-2 mb-1">
+            <input type="date" class="form-control" id="fecha_desde" placeholder="Ingrese..." name="fecha_desde" value="{{request('fecha_desde')}}">
+            <label for="fecha">Desde</label>
+        </div>
+
+        <div class="form-floating mr-2 mb-1">
+            <input type="date" class="form-control" id="fecha_hasta" placeholder="Ingrese..." name="fecha_hasta" value="{{request('fecha_hasta')}}">
+            <label for="fecha_hasta">Hasta</label>
+        </div>
+
         <div class="d-block align-self-center">
             <button type="submit" class="btn btn-primary">Buscar</button>
             <a href="{{route('transaccion.index')}}" class="btn btn-danger">Limpiar</a>
@@ -58,7 +68,7 @@
 
     @if(sizeof($transaccions)>0)
         <div class="w-100 text-end mb-1">
-            <a href="{{ @route('transaccion.download') }}" target="_blank" class="btn btn-success">Descargar</a>
+            <a href="{{ @route('transaccion.download', ['numero_de_cuenta' => Request::get('numero_de_cuenta'), 'codigo_de_banco' => Request::get('codigo_de_banco'), 'tipo_de_cuenta' => Request::get('tipo_de_cuenta'), 'nombre_del_cliente' => Request::get('nombre_del_cliente'), 'tipo_de_movimiento' => Request::get('tipo_de_movimiento'), 'fecha_desde' => Request::get('fecha_desde'), 'fecha_hasta' => Request::get('fecha_hasta')]) }}" target="_blank" class="btn btn-success">Descargar</a>
         </div>
     @endif
 

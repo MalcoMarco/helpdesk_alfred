@@ -14,6 +14,18 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
     /**
     * @return \Illuminate\Support\Collection
     */
+    protected $consultas;
+
+    public function __construct(array $consultas)
+    {
+        $this->consultas = $consultas;
+    }
+
+    public function array(): array
+    {
+        return $this->invoices;
+    }
+
     public function styles(Worksheet $sheet)
     {
         return [
@@ -39,7 +51,7 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
     public function collection()
     {
-        return Transaccion::select(
+        $transaccions = Transaccion::select(
             'num_cuenta',
             'codigo_banco',
             'tipo_cuenta',
@@ -50,6 +62,52 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'descripcion',
             'email',
             'fax'
-        )->get();
+        );
+
+        if (isset($this->consultas['numero_de_cuenta'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('num_cuenta', 'LIKE', '%'.$this->consultas['numero_de_cuenta'].'%');
+            });
+        }
+
+        if (isset($this->consultas['codigo_de_banco'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('codigo_banco', 'LIKE', '%'.$this->consultas['codigo_de_banco'].'%');
+            });
+        }
+
+        if (isset($this->consultas['tipo_de_cuenta'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('tipo_cuenta', 'LIKE', '%'.$this->consultas['tipo_de_cuenta'].'%');
+            });
+        }
+
+        if (isset($this->consultas['nombre_del_cliente'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('nombre_cliente', 'LIKE', '%'.$this->consultas['nombre_del_cliente'].'%');
+            });
+        }
+
+        if (isset($this->consultas['tipo_de_movimiento'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('tipo_movimiento', 'LIKE', '%'.$this->consultas['tipo_de_movimiento'].'%');
+            });
+        }
+
+        if (isset($this->consultas['fecha_desde'])) {
+            $transaccions = $transaccions->where(function($q) {
+                $q->orWhereDate('created_at', '>=', $this->consultas['fecha_desde']);
+            });
+        }
+
+        if (isset($this->consultas['fecha_hasta'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhereDate('created_at', '<=', $this->consultas['fecha_hasta']);
+            });
+        }
+
+        $transaccions = $transaccions->get();
+
+        return $transaccions;
     }
 }

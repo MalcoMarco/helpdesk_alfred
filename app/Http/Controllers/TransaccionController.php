@@ -35,7 +35,9 @@ class TransaccionController extends Controller
             'nombre_del_cliente' => ['nullable', 'string'],
             'tipo_de_movimiento' => ['nullable', Rule::in(['D', 'C'])],
             //'monto_de_transaccion' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
-            'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+            //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+            'fecha_desde' => 'nullable|date_format:Y-m-d',
+            'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
         ]);
 
         $transaccions = Transaccion::where('id', '>=', 1);
@@ -70,11 +72,23 @@ class TransaccionController extends Controller
             });
         }
 
-        if (isset($request->numero_de_referencia)) {
+        if (isset($request->fecha_desde)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhereDate('created_at', '>=', $request->fecha_desde);
+            });
+        }
+
+        if (isset($request->fecha_hasta)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhereDate('created_at', '<=', $request->fecha_hasta);
+            });
+        }
+
+        /*if (isset($request->numero_de_referencia)) {
             $transaccions = $transaccions->where(function($q) use($request){
                 $q->orWhere('referencia', 'LIKE', '%'.$request->numero_de_referencia.'%');
             });
-        }
+        }*/
 
         $transaccions = $transaccions->paginate(50);
 
@@ -112,7 +126,31 @@ class TransaccionController extends Controller
 
     public function download(Request $request)
     {
-        return Excel::download(new TransaccionsExport, 'transacciones.xlsx');
+        $this->validate($request, [
+            'numero_de_cuenta' => ['nullable', 'string'],
+            'codigo_de_banco' => ['nullable', 'string'],
+            'tipo_de_cuenta' => ['nullable', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
+            'nombre_del_cliente' => ['nullable', 'string'],
+            'tipo_de_movimiento' => ['nullable', Rule::in(['D', 'C'])],
+            //'monto_de_transaccion' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
+            //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+            'fecha_desde' => 'nullable|date_format:Y-m-d',
+            'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
+        ]);
+
+        $consultas = [
+            'numero_de_cuenta' => $request->numero_de_cuenta ?? null,
+            'codigo_de_banco' => $request->codigo_de_banco ?? null,
+            'tipo_de_cuenta' => $request->tipo_de_cuenta ?? null,
+            'nombre_del_cliente' => $request->nombre_del_cliente ?? null,
+            'tipo_de_movimiento' => $request->tipo_de_movimiento ?? null,
+            'fecha_desde' => $request->fecha_desde ?? null,
+            'fecha_hasta' => $request->fecha_hasta ?? null,
+        ];
+
+        $export = new TransaccionsExport($consultas);
+
+        return Excel::download($export, 'transacciones.xlsx');
     }
 
     public function notFound(Request $request)

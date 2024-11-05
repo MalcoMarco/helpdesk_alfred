@@ -26,7 +26,7 @@
 
         <div class="form-floating mr-2">
             <select class="form-select" id="tipo_de_cuenta" name="tipo_de_cuenta" aria-label="Floating label select example">
-                <option {{request('tipo_de_cuenta') ? '' : 'selected'}} disabled>-Seleccione-</option>
+                <option value="" {{request('tipo_de_cuenta') ? '' : 'selected'}}>-Ninguno-</option>
                 <option value="CC" {{request('tipo_de_cuenta')=='CC' ? 'selected' : ''}}>CC</option>
                 <option value="CA" {{request('tipo_de_cuenta')=='CA' ? 'selected' : ''}}>CA</option>
                 <option value="TJ" {{request('tipo_de_cuenta')=='TJ' ? 'selected' : ''}}>TJ</option>
@@ -40,16 +40,20 @@
             <label for="nombre_del_cliente">Nombre del Cliente</label>
         </div>
 
-        <div class="form-floating mr-2">
+        <div class="form-floating mr-2 mb-1">
             <select class="form-select" id="tipo_de_movimiento" name="tipo_de_movimiento" aria-label="Floating label select example" style="min-width: 200px;">
-                <option {{request('tipo_de_movimiento') ? '' : 'selected'}} disabled>-Seleccione-</option>
+                <option value="" {{request('tipo_de_movimiento') ? '' : 'selected'}}>-Ninguno-</option>
                 <option value="D" {{request('tipo_de_movimiento')=='D' ? 'selected' : ''}}>Débito</option>
                 <option value="C" {{request('tipo_de_movimiento')=='C' ? 'selected' : ''}}>Crédito</option>
             </select>
             <label for="tipo_de_movimiento">Tipo de Movimiento</label>
         </div>
 
-        <button type="submit" class="btn btn-primary">Buscar</button>
+        <div class="d-block align-self-center">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            <a href="{{route('transaccion.index')}}" class="btn btn-danger">Limpiar</a>
+        </div>
+        
     </form>
 
     @if(sizeof($transaccions)>0)

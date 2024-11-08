@@ -1,18 +1,48 @@
 @extends('layouts.transaccions')
 @section('content')
-<div class="container mt-3">
-    <h3 class="mb-3">TRANSACCIONES</h3>
+@php
+    $statusClasses = [
+        1 => 'text-bg-primary',
+        2 => 'text-bg-success',
+        3 => 'text-bg-danger',
+    ];
+@endphp
 
-    <form method="POST" action="{{ @route('transaccion.store') }}" class="d-inline-flex mb-3" enctype="multipart/form-data">
-        @csrf
-        <div class="input-group">
-            <input type="file" name="transaccion_file" class="form-control" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04" aria-label="Upload" accept=".xls,.xlsx,.csv" required>
-            <button class="btn btn-outline-success" type="submit" id="inputGroupFileAddon04">SUBIR</button>
-        </div>
-    </form>
+<div class="container-fluid py-3 px-8">
+    <h3 class="mb-3 text-center">TRANSACCIONES</h3>
+    <hr>
 
-    <a class="ml-1 mb-3" href="/files/transacciones/plantilla.xls" target="_blank">Descargar plantilla de Ejemplo</a>
-
+    <div class="d-flex flex-wrap justify-content-between pt-3">
+        <form method="POST" action="{{ @route('transaccion.store') }}" class="d-inline-flex" enctype="multipart/form-data">
+            @csrf
+            <div class="">
+                <label for="inputGroupFile04" class="form-label">Seleccione el archivo .xls</label>
+                <div class="input-group">
+                    <input type="file" name="transaccion_file" class="form-control" id="inputGroupFile04" aria-describedby="inputGroupFileAddon04" aria-label="Upload" accept=".xls,.xlsx,.csv" required>
+                    <button class="btn btn-outline-success" type="submit" id="inputGroupFileAddon04">SUBIR</button>
+                </div>
+            </div>
+        </form>
+        <a class="ml-1" href="/files/transacciones/plantilla.xls" target="_blank">Descargar plantilla</a>
+    </div>
+    <div class="w-100 mt-3">
+        @if (session('success'))
+            <div class="alert alert-success col-12">
+                {{ session('success') }}
+            </div>            
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger col-12">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{$error}}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+    </div> 
+    <hr>
+    <h4>Filtros: </h4>
     <form class="w-100 d-flex flex-wrap mb-3">
         <div class="form-floating mb-1 mr-2">
             <input type="text" class="form-control" id="numero_de_cuenta" name="numero_de_cuenta" placeholder="" value="{{request('numero_de_cuenta')}}">
@@ -48,6 +78,15 @@
             </select>
             <label for="tipo_de_movimiento">Tipo de Movimiento</label>
         </div>
+        <div class="form-floating mr-2 mb-1">
+            <select class="form-select" id="status" name="status" aria-label="Floating label select example" style="min-width: 200px;">
+                <option value="" {{request('status') ? '' : 'selected'}}>-Ninguno-</option>
+                @foreach ($transaccionStatus as $item => $value)
+                    <option value="{{$item}}" {{request('status')==$item ? 'selected' : ''}}>{{$value}}</option>
+                @endforeach
+            </select>
+            <label for="status">Status</label>
+        </div>
 
         <div class="form-floating mr-2 mb-1">
             <input type="date" class="form-control" id="fecha_desde" placeholder="Ingrese..." name="fecha_desde" value="{{request('fecha_desde')}}">
@@ -58,34 +97,63 @@
             <input type="date" class="form-control" id="fecha_hasta" placeholder="Ingrese..." name="fecha_hasta" value="{{request('fecha_hasta')}}">
             <label for="fecha_hasta">Hasta</label>
         </div>
-
-        <div class="d-block align-self-center">
-            <button type="submit" class="btn btn-primary">Buscar</button>
-            <a href="{{route('transaccion.index')}}" class="btn btn-danger">Limpiar</a>
+        <div class="w-100"></div>
+        <div class="d-block w-100 text-end">
+            <button type="submit" class="btn btn-primary btn-sm">Filtar</button>
+            <a href="{{route('transaccion.index')}}" class="btn btn-danger btn-sm">Limpiar</a>
         </div>
         
     </form>
-
+    <hr>
+    <h4 class="text-center">Tabla de transacciones</h4>
     @if(sizeof($transaccions)>0)
-        <div class="w-100 text-end mb-1">
-            <a href="{{ @route('transaccion.download', ['numero_de_cuenta' => Request::get('numero_de_cuenta'), 'codigo_de_banco' => Request::get('codigo_de_banco'), 'tipo_de_cuenta' => Request::get('tipo_de_cuenta'), 'nombre_del_cliente' => Request::get('nombre_del_cliente'), 'tipo_de_movimiento' => Request::get('tipo_de_movimiento'), 'fecha_desde' => Request::get('fecha_desde'), 'fecha_hasta' => Request::get('fecha_hasta')]) }}" target="_blank" class="btn btn-success">Descargar</a>
+    <div class="w-100 text-end mb-1">
+            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Exportar
+            </button>            
         </div>
     @endif
-
-    <div class="w-100">
-        @if($errors->any())
-            <div class="alert alert-danger col-12">
-                <ul class="mb-0">
-                    @foreach($errors->all() as $error)
-                        <li>{{$error}}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-    </div>  
+    <!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="exampleModalLabel">Exportar Transacciones</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ @route('transaccion.download')}}" method="GET">
+                @csrf
+                <input hidden type="text" name="numero_de_cuenta" value="{{Request::get('numero_de_cuenta')}}">
+                <input hidden type="text" name="codigo_de_banco" value="{{Request::get('codigo_de_banco')}}">
+                <input hidden type="text" name="tipo_de_cuenta" value="{{Request::get('tipo_de_cuenta')}}">
+                <input hidden type="text" name="nombre_del_cliente" value="{{Request::get('nombre_del_cliente')}}">
+                <input hidden type="text" name="tipo_de_movimiento" value="{{Request::get('tipo_de_movimiento')}}">
+                <input hidden type="text" name="fecha_desde" value="{{Request::get('fecha_desde')}}">
+                <input hidden type="text" name="fecha_hasta" value="{{Request::get('fecha_hasta')}}">
+                <input hidden type="text" name="status" value="{{Request::get('status')}}">
+                <label class="form-label">Tipo de Archivo:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="type_file" value="xlsx" id="flexRadioDefault1" checked>
+                    <label class="form-check-label" for="flexRadioDefault1" > Exportar en EXCEL </label>
+                </div>
+                <div class="form-check mb-3">
+                    <input disabled class="form-check-input" type="radio" name="type_file" value="pdf" id="flexRadioDefault2">
+                    <label class="form-check-label" for="flexRadioDefault2"> Exportar en PDF (en desarrollo)</label>
+                </div>
+                <div class="mb-3">
+                    <label for="email_to" class="form-label">Enviar por correo a: (opcional)</label>
+                    <input type="email" name="email_to" id="email_to" class="form-control" placeholder="email@example.com">
+                </div>
+                <div class="text-end"><button class="btn btn-success" type="submit" >Exportar</button></div>
+            </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <div class="w-100 table-responsive mb-4">
-        <table class="table table-bordered">
+        <table class="table table-bordered table-sm table-striped align-middle">
             <thead>
                 <tr>
                     <th>#</th>
@@ -99,12 +167,15 @@
                     <th>Descripción</th>
                     <th>Email</th>
                     <th>Fax</th>
+                    <th>Status</th>
+                    <th>created_at</th>
+                    <th>Opciones</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="table-group-divider text-center">
                 @foreach($transaccions as $key => $t)
                 <tr>
-                    <td>{{$key+1}}</td>
+                    <td>{{$transaccions->firstItem() + $key}}</td>
                     <td>{{$t->num_cuenta}}</td>
                     <td>{{$t->codigo_banco}}</td>
                     <td>{{$t->tipo_cuenta}}</td>
@@ -115,6 +186,31 @@
                     <td>{{$t->descripcion}}</td>
                     <td>{{$t->email}}</td>
                     <td>{{$t->fax}}</td>
+                    <td>
+                        <span class="badge {{ $statusClasses[$t->status] ?? 'text-bg-secondary' }}">
+                            {{ $transaccionStatus[$t->status] }}
+                        </span>
+                    </td>
+                    <td>{{$t->created_at}}</td>
+                    <td>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <svg style="width: 15px; height: 15px;" fill="currentcolor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 512"><path d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"/></svg>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a href="{{route('transaccion.edit',$t->id)}}" class="dropdown-item">Editar</a></li>
+                                <li><hr class="dropdown-divider"></li>
+
+                                <li>
+                                    <button class="dropdown-item" type="button" onclick="confirmDelete(this);">Eliminar</button>
+                                    <form action="{{ route('transaccion.destroy', $t->id) }}" method="POST" style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>                               
+                                </li>
+                            </ul>
+                          </div>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -125,4 +221,13 @@
         {{ $transaccions->links('pagination::bootstrap-5') }}
     </div> 
 </div>
+@endsection
+@section('scripts')
+<script>
+    function confirmDelete(button) {
+        if (confirm('¿Estás seguro de que deseas eliminar esta transacción?')) {
+            button.nextElementSibling.submit();
+        }
+    }
+</script>
 @endsection

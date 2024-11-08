@@ -20,5 +20,6 @@
 </head>
 <body class="font-inter leading-none antialiased">
     @yield('content')
+    @yield('scripts')
 </body>
 </html>

@@ -15,10 +15,12 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
     * @return \Illuminate\Support\Collection
     */
     protected $consultas;
+    protected $transaccionStatus;
 
-    public function __construct(array $consultas)
+    public function __construct(array $consultas, array $transaccionStatus)
     {
         $this->consultas = $consultas;
+        $this->transaccionStatus = $transaccionStatus;
     }
 
     public function array(): array
@@ -46,6 +48,7 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Descripción de transacción',
             'Email beneficiario',
             'Fax',
+            'Status',
         ];
     }
 
@@ -61,7 +64,8 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'referencia',
             'descripcion',
             'email',
-            'fax'
+            'fax',
+            'status'
         );
 
         if (isset($this->consultas['numero_de_cuenta'])) {
@@ -106,7 +110,16 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             });
         }
 
+        if (isset($this->consultas['status'])) {
+            $transaccions = $transaccions->where(function($q){
+                $q->orWhere('status', $this->consultas['status']);
+            });
+        }
+
         $transaccions = $transaccions->get();
+        foreach ($transaccions as $transaccion) {
+            $transaccion->status = $this->transaccionStatus[$transaccion->status] ?? $transaccion->status;
+        }
 
         return $transaccions;
     }

@@ -4,10 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Excel;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\TransaccionsImport;
 use App\Models\Transaccion;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Mail;
 use App\Exports\TransaccionsExport;
 use Illuminate\Validation\Rule;
 
@@ -25,7 +26,11 @@ class TransaccionController extends Controller
             return $next($request);
         });        
     }
-
+    public $transaccionStatus = [
+        1 => 'En Proceso',
+        2 => 'Procesado',
+        3 => 'Rechazado',
+    ];
     public function index(Request $request)
     {
         $this->validate($request, [
@@ -38,6 +43,7 @@ class TransaccionController extends Controller
             //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
+            'status' => ['nullable', Rule::in([1, 2, 3])],
         ]);
 
         $transaccions = Transaccion::where('id', '>=', 1);
@@ -83,6 +89,12 @@ class TransaccionController extends Controller
                 $q->orWhereDate('created_at', '<=', $request->fecha_hasta);
             });
         }
+        
+        if (isset($request->status)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('status', $request->status);
+            });
+        }
 
         /*if (isset($request->numero_de_referencia)) {
             $transaccions = $transaccions->where(function($q) use($request){
@@ -91,8 +103,8 @@ class TransaccionController extends Controller
         }*/
 
         $transaccions = $transaccions->paginate(50);
-
-        return view('transaccions.index', compact('transaccions'));
+        $transaccionStatus = $this->transaccionStatus;
+        return view('transaccions.index', compact('transaccions','transaccionStatus'));
     }
 
     public function store(Request $request)
@@ -121,7 +133,7 @@ class TransaccionController extends Controller
             }
             throw ValidationException::withMessages($errors);
         }
-        return redirect()->route('transaccion.index');
+        return redirect()->route('transaccion.index')->with('success', 'Transacciones importadas correctamente');
     }
 
     public function download(Request $request)
@@ -136,6 +148,9 @@ class TransaccionController extends Controller
             //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
+            'status' => ['nullable', Rule::in([1, 2, 3])],
+            'type_file' => ['required', Rule::in(['xlsx', 'pdf'])],
+            'email_to'=> ['nullable', 'string', 'email'],
         ]);
 
         $consultas = [
@@ -146,16 +161,71 @@ class TransaccionController extends Controller
             'tipo_de_movimiento' => $request->tipo_de_movimiento ?? null,
             'fecha_desde' => $request->fecha_desde ?? null,
             'fecha_hasta' => $request->fecha_hasta ?? null,
+            'status' => $request->status ?? null,
         ];
+        if($request->type_file == 'xlsx'){
+            // se desea exportar a excel y si exsiste $request->email_to se envia el archivo por correo electronico
+            $export = new TransaccionsExport($consultas,$this->transaccionStatus);
+            $time = time();
+            $name = "transacciones_$time.xlsx";
+            if ($request->email_to) {
+                $filePath = storage_path('app/public/' . $name);
+                Excel::store($export, 'public/' . $name);
+    
+                Mail::raw('Adjunto encontrará el archivo con la exportación de transacciones solicitada.', function ($message) use ($request, $filePath, $name) {
+                    $message->to($request->email_to)
+                            ->subject('Exportación de Transacciones')
+                            ->attach($filePath, [
+                                'as' => $name,
+                                'mime' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            ]);
+                });
+                // Eliminar el archivo temporal
+                unlink($filePath);
+                //return response()->json(['message' => 'El archivo ha sido enviado por correo electrónico.']);
+            }
+            return Excel::download($export, $name);
+        }
 
-        $export = new TransaccionsExport($consultas);
+        return;
 
-        return Excel::download($export, 'transacciones.xlsx');
     }
 
     public function notFound(Request $request)
     {
         return view('errors.404');
+    }
+
+    public function destroy(Transaccion $transaccion)
+    {
+        $transaccion->delete();
+        return redirect()->route('transaccion.index')->with('success', 'Transacción eliminada correctamente');
+    }
+
+    public function edit(Transaccion $transaccion)
+    {
+        $transaccionStatus = $this->transaccionStatus;
+        return view('transaccions.edit', compact('transaccion', 'transaccionStatus'));
+    }
+
+    public function update(Request $request, Transaccion $transaccion)
+    {
+        $this->validate($request, [
+            'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'],
+            'codigo_banco' => ['required', 'string', 'max:5'],
+            'tipo_cuenta' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
+            'nombre_cliente' => ['required', 'string', 'max:100'],
+            'tipo_movimiento' => ['required', Rule::in(['D', 'C'])],
+            'monto' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
+            'referencia' => ['nullable', 'string', 'max:10'],
+            'descripcion' => ['required', 'string', 'max:80'],
+            'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],
+            'fax' => ['nullable', 'string', 'max:100'],
+            'status' => ['required', Rule::in([1, 2, 3])],
+        ]);
+    
+        $transaccion->update($request->except(['_token', '_method']));
+        return redirect()->route('transaccion.index')->with('success', 'Transacción actualizada correctamente');
     }
 
 }

@@ -12,13 +12,14 @@ class Transaccion extends Model
     protected $fillable = [
         'num_cuenta',
         'codigo_banco',
-        'tipo_cuenta',
+        'tipo_cuenta', //["CC", "CA", "TJ", "PR"]
         'nombre_cliente',
-        'tipo_movimiento',
+        'tipo_movimiento',// ["D", "C"]
         'monto',
         'referencia',
         'descripcion',
         'email',
-        'fax'
+        'fax',
+        'status',//[1, 2, 3]
     ];
 }

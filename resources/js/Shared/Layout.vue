@@ -103,8 +103,9 @@
                   </div>
               </div>
             <flash-messages />
-              <div class="sec-cont">
+              <div class="sec-cont h-[90%] flex flex-col">
                   <slot />
+                  <div class="mt-auto"><TradingViewWidget /></div>
               </div>
           </div>
         </div>
@@ -121,7 +122,7 @@ import MainMenu from '@/Shared/MainMenu'
 import FlashMessages from '@/Shared/FlashMessages'
 import { Link } from '@inertiajs/vue3'
 import moment from 'moment'
-
+import TradingViewWidget from './TradingViewWidget.vue'
 export default {
     components: {
         Dropdown,
@@ -129,7 +130,7 @@ export default {
         Icon,
         Logo,
         Link,
-        MainMenu,
+        MainMenu,TradingViewWidget
     },
     props: {
         title: String,

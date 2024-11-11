@@ -38,7 +38,7 @@
       });
       this.$nextTick(() => {
           
-          document.body.appendChild(script);
+        document.querySelector('.tradingview-widget-container__widget').appendChild(script);
           console.log('TradingViewWidget mounted');
       });
     },

@@ -207,7 +207,7 @@
           </div>
       </div>
       <!-- Loading Process -->
-
+      <TradingViewWidget />
   </div>
 </template>
 
@@ -215,13 +215,13 @@
 import {Head, Link} from '@inertiajs/vue3'
 import Layout from '@/Shared/Layout'
 import Icon from '@/Shared/Icon'
-
+import TradingViewWidget from '@/Shared/TradingViewWidget'
 export default {
   metaInfo: { title: 'Dashboard' },
     components: {
         Head,
         Icon,
-        Link,
+        Link,TradingViewWidget
     },
   layout: Layout,
     props: {

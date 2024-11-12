@@ -144,7 +144,7 @@
                         <input class="form-check-input" type="radio" name="type_file" value="pdf" id="flexRadioDefault2">
                         <label class="form-check-label" for="flexRadioDefault2"> 
                             <img src="/images/svg/pdf.png" style="width: 50px; height: 50px"> 
-                            en PDF (en desarrollo)</label>
+                            en PDF</label>
                     </div>
                 </div>
                 <div class="mb-3">

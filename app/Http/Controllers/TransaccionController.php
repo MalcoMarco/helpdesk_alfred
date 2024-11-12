@@ -11,6 +11,8 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use App\Exports\TransaccionsExport;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
 
 class TransaccionController extends Controller
 {
@@ -163,10 +165,11 @@ class TransaccionController extends Controller
             'fecha_hasta' => $request->fecha_hasta ?? null,
             'status' => $request->status ?? null,
         ];
+        $time = time();
         if($request->type_file == 'xlsx'){
             // se desea exportar a excel y si exsiste $request->email_to se envia el archivo por correo electronico
             $export = new TransaccionsExport($consultas,$this->transaccionStatus);
-            $time = time();
+            
             $name = "transacciones_$time.xlsx";
             if ($request->email_to) {
                 $filePath = storage_path('app/public/' . $name);
@@ -184,7 +187,101 @@ class TransaccionController extends Controller
                 unlink($filePath);
             }
             return Excel::download($export, $name);
-        }
+
+        }elseif($request->type_file == 'pdf'){
+
+            $transaccions = Transaccion::select(
+                'num_cuenta',
+                'codigo_banco',
+                'tipo_cuenta',
+                'nombre_cliente',
+                'tipo_movimiento',
+                'monto',
+                'referencia',
+                'descripcion',
+                'email',
+                'fax',
+                'status',
+                DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
+            );
+
+            if (isset($consultas['numero_de_cuenta'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('num_cuenta', 'LIKE', '%'.$consultas['numero_de_cuenta'].'%');
+                });
+            }
+
+            if (isset($consultas['codigo_de_banco'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('codigo_banco', 'LIKE', '%'.$consultas['codigo_de_banco'].'%');
+                });
+            }
+
+            if (isset($consultas['tipo_de_cuenta'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('tipo_cuenta', 'LIKE', '%'.$consultas['tipo_de_cuenta'].'%');
+                });
+            }
+
+            if (isset($consultas['nombre_del_cliente'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('nombre_cliente', 'LIKE', '%'.$consultas['nombre_del_cliente'].'%');
+                });
+            }
+
+            if (isset($consultas['tipo_de_movimiento'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('tipo_movimiento', 'LIKE', '%'.$consultas['tipo_de_movimiento'].'%');
+                });
+            }
+
+            if (isset($consultas['fecha_desde'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas) {
+                    $q->orWhereDate('created_at', '>=', $consultas['fecha_desde']);
+                });
+            }
+
+            if (isset($consultas['fecha_hasta'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhereDate('created_at', '<=', $consultas['fecha_hasta']);
+                });
+            }
+
+            if (isset($consultas['status'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('status', $consultas['status']);
+                });
+            }
+
+            $transaccions = $transaccions->get();
+            foreach ($transaccions as $transaccion) {
+                $transaccion->status2 = $this->transaccionStatus[$transaccion->status] ?? $transaccion->status;
+            }
+            $fecha = date("d-m-Y H:i:s");
+
+            $pdf = Pdf::loadView('transaccions.pdf.reporte_pdf', ['transaccions' => $transaccions, 'fecha' => $fecha])->setPaper('a4', 'landscape');
+
+            $name2 = 'Reporte Transacciones_'.$time.'.pdf';
+            if ($request->email_to) {
+
+                $pdfOutput = $pdf->output();
+                $pdfFilePath = storage_path('app/public/'.$name2);
+                file_put_contents($pdfFilePath, $pdfOutput); // Guardar temporalmente el PDF
+    
+                Mail::raw('Adjunto encontrará el archivo con la exportación de transacciones solicitada.', function ($message) use ($request, $pdfFilePath, $name2) {
+                    $message->to($request->email_to)
+                            ->subject('Exportación de Transacciones (PDF)')
+                            ->attach($pdfFilePath, [
+                                'as' => $name2,
+                                'mime' => 'application/pdf',
+                            ]);
+                });
+                // Eliminar el archivo temporal
+                unlink($pdfFilePath);
+            }
+
+            return $pdf->download($name2);
+        } 
 
         return;
 

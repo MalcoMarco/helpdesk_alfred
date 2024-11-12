@@ -8,6 +8,7 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Illuminate\Support\Facades\DB;
 
 class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize, WithStyles
 {
@@ -49,6 +50,7 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Email beneficiario',
             'Fax',
             'Status',
+            'Fecha creación',
         ];
     }
 
@@ -65,7 +67,8 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'descripcion',
             'email',
             'fax',
-            'status'
+            'status',
+            DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
         );
 
         if (isset($this->consultas['numero_de_cuenta'])) {

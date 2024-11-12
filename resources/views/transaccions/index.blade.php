@@ -99,7 +99,7 @@
         </div>
         <div class="w-100"></div>
         <div class="d-block w-100 text-end">
-            <button type="submit" class="btn btn-primary btn-sm">Filtar</button>
+            <button type="submit" class="btn btn-primary btn-sm">Filtrar</button>
             <a href="{{route('transaccion.index')}}" class="btn btn-danger btn-sm">Limpiar</a>
         </div>
         

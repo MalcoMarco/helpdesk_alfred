@@ -15,7 +15,7 @@
             </Link>
         </div>
     </div>
-    <div class="menu-item">
+    <div class="menu-item" v-if="user.role.slug === 'admin'">
         <a class="flex items-center group py-3 menu-link" href="/dashboard/transacciones" target="_blank">
             <div class="menu__name">Excel Transacciones</div>
         </a>

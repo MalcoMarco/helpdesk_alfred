@@ -182,7 +182,6 @@ class TransaccionController extends Controller
                 });
                 // Eliminar el archivo temporal
                 unlink($filePath);
-                //return response()->json(['message' => 'El archivo ha sido enviado por correo electrónico.']);
             }
             return Excel::download($export, $name);
         }

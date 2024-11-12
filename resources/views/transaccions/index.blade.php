@@ -133,13 +133,19 @@
                 <input hidden type="text" name="fecha_hasta" value="{{Request::get('fecha_hasta')}}">
                 <input hidden type="text" name="status" value="{{Request::get('status')}}">
                 <label class="form-label">Tipo de Archivo:</label>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="type_file" value="xlsx" id="flexRadioDefault1" checked>
-                    <label class="form-check-label" for="flexRadioDefault1" > Exportar en EXCEL </label>
-                </div>
-                <div class="form-check mb-3">
-                    <input disabled class="form-check-input" type="radio" name="type_file" value="pdf" id="flexRadioDefault2">
-                    <label class="form-check-label" for="flexRadioDefault2"> Exportar en PDF (en desarrollo)</label>
+                <div class="mb-4">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="type_file" value="xlsx" id="flexRadioDefault1" checked>
+                        <label class="form-check-label" for="flexRadioDefault1" > 
+                            <img src="/images/svg/excel.png" style="width: 50px; height: 50px">
+                             en EXCEL </label>
+                    </div>
+                    <div class="form-check mb-3 form-check-inline">
+                        <input class="form-check-input" type="radio" name="type_file" value="pdf" id="flexRadioDefault2">
+                        <label class="form-check-label" for="flexRadioDefault2"> 
+                            <img src="/images/svg/pdf.png" style="width: 50px; height: 50px"> 
+                            en PDF (en desarrollo)</label>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label for="email_to" class="form-label">Enviar por correo a: (opcional)</label>

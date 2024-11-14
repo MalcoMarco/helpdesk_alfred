@@ -308,7 +308,7 @@ class TransaccionController extends Controller
     {
         $this->validate($request, [
             'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'],
-            'codigo_banco' => ['required', 'string', 'max:5'],
+            'codigo_banco' => ['required', 'string', 'max:200'],
             'tipo_cuenta' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
             'nombre_cliente' => ['required', 'string', 'max:100'],
             'tipo_movimiento' => ['required', Rule::in(['D', 'C'])],

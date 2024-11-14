@@ -38,7 +38,7 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
                 },
             ],*/
             '*.0' => ['required', 'regex:/^\d{1,34}$/'],//'num_cuenta'
-            '*.1' => ['required', 'string', 'max:5'],//'codigo_banco'
+            '*.1' => ['required', 'string', 'max:200'],//'codigo_banco'
             '*.2' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],//'tipo_cuenta'
             '*.3' => ['required', 'string', 'max:100'],//'nombre_cliente'
             '*.4' => ['required', Rule::in(['D', 'C'])],//'tipo_movimiento'

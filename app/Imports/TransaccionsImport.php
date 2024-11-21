@@ -43,8 +43,8 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
             '*.3' => ['required', 'string', 'max:100'],//'nombre_cliente'
             '*.4' => ['required', Rule::in(['D', 'C'])],//'tipo_movimiento'
             '*.5' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],// monto
-            '*.6' => ['nullable', 'string', 'max:10'],// referencia
-            '*.7' => ['required', 'string', 'max:80'],// descripcion
+            '*.6' => ['nullable', 'alpha_num:ascii', 'max:15'],// referencia
+            '*.7' => ['nullable', 'string', 'max:80'],// descripcion
             '*.8' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],// email
             '*.9' => ['nullable', 'alpha_num', 'max:100'],// fax
         ];

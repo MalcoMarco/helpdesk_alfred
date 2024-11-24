@@ -294,7 +294,7 @@ class TransaccionController extends Controller
     public function update(Request $request, Transaccion $transaccion)
     {
         $this->validate($request, [
-            'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'],
+            /*'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'],
             'codigo_banco' => ['required', 'string', 'max:200'],
             'tipo_cuenta' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
             'nombre_cliente' => ['required', 'string', 'max:100'],
@@ -304,7 +304,17 @@ class TransaccionController extends Controller
             'descripcion' => ['nullable', 'string', 'max:80'],
             'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],
             'fax' => ['nullable', 'string', 'max:100'],
-            'status' => ['required', Rule::in([1, 2, 3])],
+            'status' => ['required', Rule::in([1, 2, 3])],*/
+
+            'codigo_banco' => ['required', 'string', 'max:255'],//codigo_banco
+            'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'], //num_cuenta
+            'num_ident' => ['required', 'alpha_num:ascii', 'max:30'], //num_ident
+            'tipo_ident' => ['required', Rule::in(['C', 'P'])], //tipo_ident
+            'nombre_cliente' => ['required', 'string', 'max:100'], //nombre_cliente
+            'valor' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'], //valor: hasta 15 digitos con 2 decimales
+            'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'], //email
+            'fecha' => ['required', 'date_format:Y-m-d'], // fecha
+            'status' => ['required', Rule::in(['procesada', 'rechazada', 'en proceso'])],//status
         ]);
     
         $transaccion->update($request->except(['_token', '_method']));

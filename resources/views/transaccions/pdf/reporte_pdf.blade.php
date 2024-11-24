@@ -101,16 +101,14 @@
 
 	    <table class="transaction-table">
 	        <tr>
+                <th>Código de Banco</th>
 	            <th>No. Cuenta</th>
-	            <th>Código de Banco</th>
-	            <th>Tipo de Cuenta</th>
+	            <th>No. Identificación</th>
+                <th>Tipo Identificación</th>
 	            <th>Nombre del Cliente</th>
-	            <th>Tipo de movimiento</th>
-	            <th class="amount">Monto</th>
-	            <th>Referencia</th>
-	            <th>Descripción</th>
-	            <th>Email</th>
-	            <th>Fax</th>
+	            <th class="amount">Valor</th>
+	            <th>Email Beneficiario</th>
+	            <th>Fecha</th>
 	            <th>Status</th>
 	            <th>Creación</th>
 	        </tr>
@@ -118,17 +116,15 @@
 	        <!-- BODY -->
 	        @foreach($transaccions as $key => $t)
 	        <tr>
+                <td>{{$t->codigo_banco}}</td>
 	            <td>{{$t->num_cuenta}}</td>
-	            <td>{{$t->codigo_banco}}</td>
-	            <td>{{$t->tipo_cuenta}}</td>
-	            <td>{{$t->nombre_cliente}}</td>
-	            <td>{{$t->tipo_movimiento}}</td>
-	            <td class="amount">{{$t->monto}}</td>
-	            <td>{{$t->referencia}}</td>
-	            <td>{{$t->descripcion}}</td>
+	            <td>{{$t->num_ident}}</td>
+	            <td>{{$t->tipo_ident}}</td>
+                <td>{{$t->nombre_cliente}}</td>
+	            <td class="amount">{{$t->valor}}</td>
 	            <td>{{$t->email}}</td>
-	            <td>{{$t->fax}}</td>
-	            <td>{{$t->status2}}</td>
+	            <td>{{$t->fecha}}</td>
+	            <td>{{ucfirst($t->status)}}</td>
 	            <td>{{$t->formatted_date}}</td>
 	        </tr>
 	        @endforeach	       

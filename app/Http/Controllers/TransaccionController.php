@@ -38,14 +38,12 @@ class TransaccionController extends Controller
         $this->validate($request, [
             'numero_de_cuenta' => ['nullable', 'string'],
             'codigo_de_banco' => ['nullable', 'string'],
-            'tipo_de_cuenta' => ['nullable', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
             'nombre_del_cliente' => ['nullable', 'string'],
-            'tipo_de_movimiento' => ['nullable', Rule::in(['D', 'C'])],
-            //'monto_de_transaccion' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
-            //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+            'numero_identificacion' => ['nullable', 'string'],
+            'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
-            'status' => ['nullable', Rule::in([1, 2, 3])],
+            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
         ]);
 
         $transaccions = Transaccion::where('id', '>=', 1);
@@ -62,21 +60,21 @@ class TransaccionController extends Controller
             });
         }
 
-        if (isset($request->tipo_de_cuenta)) {
+        if (isset($request->numero_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('tipo_cuenta', 'LIKE', '%'.$request->tipo_de_cuenta.'%');
+                $q->orWhere('num_ident', 'LIKE', '%'.$request->numero_identificacion.'%');
+            });
+        }
+
+        if (isset($request->tipo_identificacion)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('tipo_ident', $request->tipo_identificacion);
             });
         }
 
         if (isset($request->nombre_del_cliente)) {
             $transaccions = $transaccions->where(function($q) use($request){
                 $q->orWhere('nombre_cliente', 'LIKE', '%'.$request->nombre_del_cliente.'%');
-            });
-        }
-
-        if (isset($request->tipo_de_movimiento)) {
-            $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('tipo_movimiento', 'LIKE', '%'.$request->tipo_de_movimiento.'%');
             });
         }
 
@@ -97,12 +95,6 @@ class TransaccionController extends Controller
                 $q->orWhere('status', $request->status);
             });
         }
-
-        /*if (isset($request->numero_de_referencia)) {
-            $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('referencia', 'LIKE', '%'.$request->numero_de_referencia.'%');
-            });
-        }*/
 
         $transaccions = $transaccions->paginate(50);
         $transaccionStatus = $this->transaccionStatus;
@@ -128,7 +120,7 @@ class TransaccionController extends Controller
                 $rowi = $failure->row(); // row that went wrong
                 $attribute = $failure->attribute(); // either heading key (if using heading row concern) or column index
                 $failure->errors(); // Actual error messages from Laravel validator
-                $failure->values(); // The values of the row that has failed.
+                //dd($failure->values()); // The values of the row that has failed.
                 $e_m = $failure->errors();
                 array_unshift($e_m, 'Error en la fila '.($rowi).'.');
                 $errors = [$attribute => $e_m];
@@ -143,14 +135,12 @@ class TransaccionController extends Controller
         $this->validate($request, [
             'numero_de_cuenta' => ['nullable', 'string'],
             'codigo_de_banco' => ['nullable', 'string'],
-            'tipo_de_cuenta' => ['nullable', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
             'nombre_del_cliente' => ['nullable', 'string'],
-            'tipo_de_movimiento' => ['nullable', Rule::in(['D', 'C'])],
-            //'monto_de_transaccion' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
-            //'numero_de_referencia' => ['nullable', 'string', 'max:10'],
+            'numero_identificacion' => ['nullable', 'string'],
+            'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
-            'status' => ['nullable', Rule::in([1, 2, 3])],
+            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
             'type_file' => ['required', Rule::in(['xlsx', 'pdf'])],
             'email_to'=> ['nullable', 'string', 'email'],
         ]);
@@ -158,13 +148,14 @@ class TransaccionController extends Controller
         $consultas = [
             'numero_de_cuenta' => $request->numero_de_cuenta ?? null,
             'codigo_de_banco' => $request->codigo_de_banco ?? null,
-            'tipo_de_cuenta' => $request->tipo_de_cuenta ?? null,
+            'numero_identificacion' => $request->numero_identificacion ?? null,
             'nombre_del_cliente' => $request->nombre_del_cliente ?? null,
-            'tipo_de_movimiento' => $request->tipo_de_movimiento ?? null,
+            'tipo_identificacion' => $request->tipo_identificacion ?? null,
             'fecha_desde' => $request->fecha_desde ?? null,
             'fecha_hasta' => $request->fecha_hasta ?? null,
             'status' => $request->status ?? null,
         ];
+
         $time = time();
         if($request->type_file == 'xlsx'){
             // se desea exportar a excel y si exsiste $request->email_to se envia el archivo por correo electronico
@@ -193,14 +184,12 @@ class TransaccionController extends Controller
             $transaccions = Transaccion::select(
                 'num_cuenta',
                 'codigo_banco',
-                'tipo_cuenta',
+                'num_ident',
+                'tipo_ident',
                 'nombre_cliente',
-                'tipo_movimiento',
-                'monto',
-                'referencia',
-                'descripcion',
+                'valor',
                 'email',
-                'fax',
+                'fecha',
                 'status',
                 DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
             );
@@ -217,21 +206,21 @@ class TransaccionController extends Controller
                 });
             }
 
-            if (isset($consultas['tipo_de_cuenta'])) {
+            if (isset($consultas['numero_identificacion'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('tipo_cuenta', 'LIKE', '%'.$consultas['tipo_de_cuenta'].'%');
+                    $q->orWhere('num_ident', 'LIKE', '%'.$consultas['numero_identificacion'].'%');
+                });
+            }
+
+            if (isset($consultas['tipo_identificacion'])) {
+                $transaccions = $transaccions->where(function($q) use($consultas){
+                    $q->orWhere('tipo_ident', $consultas['tipo_identificacion']);
                 });
             }
 
             if (isset($consultas['nombre_del_cliente'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
                     $q->orWhere('nombre_cliente', 'LIKE', '%'.$consultas['nombre_del_cliente'].'%');
-                });
-            }
-
-            if (isset($consultas['tipo_de_movimiento'])) {
-                $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('tipo_movimiento', 'LIKE', '%'.$consultas['tipo_de_movimiento'].'%');
                 });
             }
 
@@ -254,9 +243,7 @@ class TransaccionController extends Controller
             }
 
             $transaccions = $transaccions->get();
-            foreach ($transaccions as $transaccion) {
-                $transaccion->status2 = $this->transaccionStatus[$transaccion->status] ?? $transaccion->status;
-            }
+
             $fecha = date("d-m-Y H:i:s");
 
             $pdf = Pdf::loadView('transaccions.pdf.reporte_pdf', ['transaccions' => $transaccions, 'fecha' => $fecha])->setPaper('a4', 'landscape');

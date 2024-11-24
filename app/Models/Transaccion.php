@@ -10,7 +10,7 @@ class Transaccion extends Model
     use HasFactory;
 
     protected $fillable = [
-        'num_cuenta',
+        /*'num_cuenta',
         'codigo_banco',
         'tipo_cuenta', //["CC", "CA", "TJ", "PR"]
         'nombre_cliente',
@@ -20,6 +20,16 @@ class Transaccion extends Model
         'descripcion',
         'email',
         'fax',
-        'status',//[1, 2, 3]
+        'status',//[1, 2, 3]*/
+
+        'codigo_banco',
+        'num_cuenta',
+        'num_ident',
+        'tipo_ident',
+        'nombre_cliente',
+        'valor',
+        'email',
+        'fecha',
+        'status',
     ];
 }

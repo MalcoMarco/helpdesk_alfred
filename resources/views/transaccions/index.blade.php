@@ -2,9 +2,9 @@
 @section('content')
 @php
     $statusClasses = [
-        1 => 'text-bg-primary',
-        2 => 'text-bg-success',
-        3 => 'text-bg-danger',
+        'en proceso' => 'text-bg-primary',
+        'procesada' => 'text-bg-success',
+        'rechazada' => 'text-bg-danger',
     ];
 @endphp
 
@@ -44,25 +44,29 @@
     <hr>
     <h4>Filtros: </h4>
     <form class="w-100 d-flex flex-wrap mb-3">
-        <div class="form-floating mb-1 mr-2">
-            <input type="text" class="form-control" id="numero_de_cuenta" name="numero_de_cuenta" placeholder="" value="{{request('numero_de_cuenta')}}">
-            <label for="numero_de_cuenta">Número de Cuenta</label>
-        </div>
 
         <div class="form-floating mb-1 mr-2">
             <input type="text" class="form-control" id="codigo_de_banco" name="codigo_de_banco" placeholder="" value="{{request('codigo_de_banco')}}">
             <label for="codigo_de_banco">Código de Banco</label>
         </div>
 
+        <div class="form-floating mb-1 mr-2">
+            <input type="text" class="form-control" id="numero_de_cuenta" name="numero_de_cuenta" placeholder="" value="{{request('numero_de_cuenta')}}">
+            <label for="numero_de_cuenta">Número de Cuenta</label>
+        </div>
+
+        <div class="form-floating mb-1 mr-2">
+            <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" placeholder="" value="{{request('numero_identificacion')}}">
+            <label for="numero_identificacion">Número Identificación</label>
+        </div>
+
         <div class="form-floating mr-2 mb-1">
-            <select class="form-select" id="tipo_de_cuenta" name="tipo_de_cuenta" aria-label="Floating label select example">
-                <option value="" {{request('tipo_de_cuenta') ? '' : 'selected'}}>-Ninguno-</option>
-                <option value="CC" {{request('tipo_de_cuenta')=='CC' ? 'selected' : ''}}>CC</option>
-                <option value="CA" {{request('tipo_de_cuenta')=='CA' ? 'selected' : ''}}>CA</option>
-                <option value="TJ" {{request('tipo_de_cuenta')=='TJ' ? 'selected' : ''}}>TJ</option>
-                <option value="PR" {{request('tipo_de_cuenta')=='PR' ? 'selected' : ''}}>PR</option>
+            <select class="form-select" id="tipo_identificacion" name="tipo_identificacion" aria-label="Floating label select example">
+                <option value="" {{request('tipo_identificacion') ? '' : 'selected'}}>-Ninguno-</option>
+                <option value="C" {{request('tipo_identificacion')=='C' ? 'selected' : ''}}>C</option>
+                <option value="P" {{request('tipo_identificacion')=='P' ? 'selected' : ''}}>P</option>
             </select>
-            <label for="tipo_de_cuenta">Tipo de Cuenta</label>
+            <label for="tipo_identificacion">Identificación</label>
         </div>
 
         <div class="form-floating mb-1 mr-2">
@@ -71,19 +75,11 @@
         </div>
 
         <div class="form-floating mr-2 mb-1">
-            <select class="form-select" id="tipo_de_movimiento" name="tipo_de_movimiento" aria-label="Floating label select example" style="min-width: 200px;">
-                <option value="" {{request('tipo_de_movimiento') ? '' : 'selected'}}>-Ninguno-</option>
-                <option value="D" {{request('tipo_de_movimiento')=='D' ? 'selected' : ''}}>Débito</option>
-                <option value="C" {{request('tipo_de_movimiento')=='C' ? 'selected' : ''}}>Crédito</option>
-            </select>
-            <label for="tipo_de_movimiento">Tipo de Movimiento</label>
-        </div>
-        <div class="form-floating mr-2 mb-1">
             <select class="form-select" id="status" name="status" aria-label="Floating label select example" style="min-width: 200px;">
                 <option value="" {{request('status') ? '' : 'selected'}}>-Ninguno-</option>
-                @foreach ($transaccionStatus as $item => $value)
-                    <option value="{{$item}}" {{request('status')==$item ? 'selected' : ''}}>{{$value}}</option>
-                @endforeach
+                <option value="en proceso" {{request('status')=='en proceso' ? 'selected' : ''}}>En proceso</option>
+                <option value="procesada" {{request('status')=='procesada' ? 'selected' : ''}}>Procesada</option>
+                <option value="rechazada" {{request('status')=='rechazada' ? 'selected' : ''}}>Rechazada</option>
             </select>
             <label for="status">Status</label>
         </div>
@@ -158,21 +154,19 @@
     </div>
   </div>
 
-    <div class="w-100 table-responsive mb-4">
+    <div class="w-100 table-responsive mb-4" style="font-size: 14px;">
         <table class="table table-bordered table-sm table-striped align-middle">
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Número de Cuenta</th>
-                    <th>Banco</th>
-                    <th>Tipo de Cuenta</th>
-                    <th>Cliente</th>
-                    <th>Tipo de Mov.</th>
-                    <th>Monto</th>
-                    <th>Referencia</th>
-                    <th>Descripción</th>
+                    <th>Código Banco</th>
+                    <th>Nro. de Cuenta</th>
+                    <th>Nro. Identificación</th>
+                    <th>Tipo Identificación</th>
+                    <th>Nombre de Cliente.</th>
+                    <th>Valor</th>
                     <th>Email</th>
-                    <th>Fax</th>
+                    <th>Fecha</th>
                     <th>Status</th>
                     <th>created_at</th>
                     <th>Opciones</th>
@@ -182,19 +176,17 @@
                 @foreach($transaccions as $key => $t)
                 <tr>
                     <td>{{$transaccions->firstItem() + $key}}</td>
-                    <td>{{$t->num_cuenta}}</td>
                     <td>{{$t->codigo_banco}}</td>
-                    <td>{{$t->tipo_cuenta}}</td>
+                    <td>{{$t->num_cuenta}}</td>
+                    <td>{{$t->num_ident}}</td>
+                    <td>{{$t->tipo_ident}}</td>
                     <td>{{$t->nombre_cliente}}</td>
-                    <td>{{$t->tipo_movimiento}}</td>
-                    <td>{{$t->monto}}</td>
-                    <td>{{$t->referencia}}</td>
-                    <td>{{$t->descripcion}}</td>
+                    <td>{{$t->valor}}</td>
                     <td>{{$t->email}}</td>
-                    <td>{{$t->fax}}</td>
+                    <td>{{$t->fecha}}</td>
                     <td>
                         <span class="badge {{ $statusClasses[$t->status] ?? 'text-bg-secondary' }}">
-                            {{ $transaccionStatus[$t->status] }}
+                            {{ ucfirst($t->status) }}
                         </span>
                     </td>
                     <td>{{$t->created_at}}</td>

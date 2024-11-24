@@ -39,36 +39,34 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
      public function headings(): array
     {
         return [
-            'No. de Cuenta',
             'Código de Banco',
-            'Tipo de Cuenta',
+            'No. de Cuenta',
+            'No. Identificación',
+            'Tipo Identificación',
             'Nombre del cliente',
-            'Tipo de movimiento',
             'Valor de transacción',
-            'Referencia de transacción',
-            'Descripción de transacción',
             'Email beneficiario',
-            'Fax',
+            'Fecha',
             'Status',
-            'Fecha creación',
+            'F. creación',
         ];
     }
 
     public function collection()
     {
         $transaccions = Transaccion::select(
-            'num_cuenta',
             'codigo_banco',
-            'tipo_cuenta',
+            'num_cuenta',
+            'num_ident',
+            'tipo_ident',
             'nombre_cliente',
-            'tipo_movimiento',
-            'monto',
-            'referencia',
-            'descripcion',
+            'valor',
             'email',
-            'fax',
-            'status',
+            'fecha',
+            //'status',
+            DB::raw("CONCAT(UPPER(SUBSTRING(status, 1, 1)), LOWER(SUBSTRING(status, 2))) AS status"),
             DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
+
         );
 
         if (isset($this->consultas['numero_de_cuenta'])) {
@@ -83,21 +81,21 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             });
         }
 
-        if (isset($this->consultas['tipo_de_cuenta'])) {
-            $transaccions = $transaccions->where(function($q){
-                $q->orWhere('tipo_cuenta', 'LIKE', '%'.$this->consultas['tipo_de_cuenta'].'%');
+        if (isset($this->consultas['numero_identificacion'])) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('num_ident', 'LIKE', '%'.$this->consultas['numero_identificacion'].'%');
+            });
+        }
+
+        if (isset($this->consultas['tipo_identificacion'])) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('tipo_ident', $this->consultas['tipo_identificacion']);
             });
         }
 
         if (isset($this->consultas['nombre_del_cliente'])) {
             $transaccions = $transaccions->where(function($q){
                 $q->orWhere('nombre_cliente', 'LIKE', '%'.$this->consultas['nombre_del_cliente'].'%');
-            });
-        }
-
-        if (isset($this->consultas['tipo_de_movimiento'])) {
-            $transaccions = $transaccions->where(function($q){
-                $q->orWhere('tipo_movimiento', 'LIKE', '%'.$this->consultas['tipo_de_movimiento'].'%');
             });
         }
 
@@ -120,9 +118,6 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
         }
 
         $transaccions = $transaccions->get();
-        foreach ($transaccions as $transaccion) {
-            $transaccion->status = $this->transaccionStatus[$transaccion->status] ?? $transaccion->status;
-        }
 
         return $transaccions;
     }

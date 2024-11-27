@@ -46,8 +46,9 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Nombre del cliente',
             'Valor de transacción',
             'Email beneficiario',
-            'Fecha',
+            'ID',
             'Status',
+            'Fecha',
             'F. creación',
         ];
     }
@@ -62,9 +63,10 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'nombre_cliente',
             'valor',
             'email',
+            'id_t',
+            'status',
+            //DB::raw("CONCAT(UPPER(SUBSTRING(status, 1, 1)), LOWER(SUBSTRING(status, 2))) AS status"),
             'fecha',
-            //'status',
-            DB::raw("CONCAT(UPPER(SUBSTRING(status, 1, 1)), LOWER(SUBSTRING(status, 2))) AS status"),
             DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
 
         );

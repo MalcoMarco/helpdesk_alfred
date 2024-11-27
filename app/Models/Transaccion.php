@@ -29,7 +29,8 @@ class Transaccion extends Model
         'nombre_cliente',
         'valor',
         'email',
-        'fecha',
+        'id_t',
         'status',
+        'fecha',
     ];
 }

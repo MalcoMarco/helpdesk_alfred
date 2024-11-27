@@ -108,8 +108,9 @@
 	            <th>Nombre del Cliente</th>
 	            <th class="amount">Valor</th>
 	            <th>Email Beneficiario</th>
+                <th>ID</th>
+                <th>Status</th>
 	            <th>Fecha</th>
-	            <th>Status</th>
 	            <th>Creación</th>
 	        </tr>
 
@@ -123,8 +124,9 @@
                 <td>{{$t->nombre_cliente}}</td>
 	            <td class="amount">{{$t->valor}}</td>
 	            <td>{{$t->email}}</td>
+                <td>{{$t->id_t}}</td>
+                <td>{{$t->status}}</td>
 	            <td>{{$t->fecha}}</td>
-	            <td>{{ucfirst($t->status)}}</td>
 	            <td>{{$t->formatted_date}}</td>
 	        </tr>
 	        @endforeach	       

@@ -189,8 +189,9 @@ class TransaccionController extends Controller
                 'nombre_cliente',
                 'valor',
                 'email',
-                'fecha',
+                'id_t',
                 'status',
+                'fecha',
                 DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
             );
 
@@ -313,10 +314,11 @@ class TransaccionController extends Controller
             'nombre_cliente' => ['required', 'string', 'max:100'], //nombre_cliente
             'valor' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'], //valor: hasta 15 digitos con 2 decimales
             'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'], //email
+            'id' => ['required', 'integer'],
             'fecha' => ['required', 'date_format:Y-m-d'], // fecha
-            'status' => ['required', Rule::in(['procesada', 'rechazada', 'en proceso'])],//status
+            'status' => ['required', Rule::in(['PROCESSED', 'REJECTED', 'SENT'])],//status
         ]);
-    
+        $transaccion->update(['id_t' => $request->id]);
         $transaccion->update($request->except(['_token', '_method']));
         return redirect()->route('transaccion.index')->with('success', 'Transacción actualizada correctamente');
     }

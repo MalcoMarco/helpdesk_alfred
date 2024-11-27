@@ -8,8 +8,9 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\WithStartRow;
 use Carbon\Carbon;
+use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 
-class TransaccionsImport implements ToModel, WithValidation, WithStartRow
+class TransaccionsImport implements ToModel, WithValidation, WithStartRow, SkipsEmptyRows
 {
     /**
     * @param array $row
@@ -56,8 +57,9 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
             '*.4' => ['required', 'string', 'max:100'], //nombre_cliente
             '*.5' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'], //valor: hasta 15 digitos con 2 decimales
             '*.6' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],
-            '*.7' => ['required', 'date_format:Y-m-d'],
-            '*.8' => ['required', Rule::in(['procesada', 'rechazada', 'en proceso'])],
+            '*.7' => ['required', 'integer'],
+            '*.8' => ['required', Rule::in(['PROCESSED', 'REJECTED', 'SENT'])],
+            '*.9' => ['required', 'date_format:Y-m-d'],
         ];
     }
 
@@ -82,8 +84,9 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
             '4' => 'Nombre del Cliente',
             '5' => 'Valor Transacción',
             '6' => 'Email Beneficiario',
-            '7' => 'Fecha',
+            '7' => 'ID',
             '8' => 'Estado',
+            '9' => 'Fecha',
          ];
     }
 
@@ -97,8 +100,9 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
             'nombre_cliente' => $row[4],
             'valor' => $row[5],
             'email' => $row[6],
-            'fecha' => $row[7],
-            'status' => strtolower($row[8]),
+            'id_t' => $row[7],
+            'status' => $row[8],
+            'fecha' => $row[9],
 
             /*'num_cuenta' => $row[0],
             'codigo_banco' => $row[1],
@@ -115,8 +119,9 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow
 
     public function prepareForValidation($data, $index)
     {
-        $data['8'] = strtolower($data['8']); // el status a minusculas
-        $data['7'] = is_numeric($data['7']) ? Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($data['7']))->format('Y-m-d') : $data['7']; // la fecha si es entera a fecha normal
+        
+        //$data['8'] = strtolower($data['8']); // el status a minusculas
+        $data['9'] = is_numeric($data['9']) ? Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($data['9']))->format('Y-m-d') : $data['9']; // la fecha si es entera a fecha normal
         
         return $data;
     }

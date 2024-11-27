@@ -2,9 +2,9 @@
 @section('content')
 @php
     $statusClasses = [
-        'en proceso' => 'text-bg-primary',
-        'procesada' => 'text-bg-success',
-        'rechazada' => 'text-bg-danger',
+        'SENT' => 'text-bg-primary',
+        'PROCESSED' => 'text-bg-success',
+        'REJECTED' => 'text-bg-danger',
     ];
 @endphp
 
@@ -166,8 +166,9 @@
                     <th>Nombre de Cliente.</th>
                     <th>Valor</th>
                     <th>Email</th>
-                    <th>Fecha</th>
+                    <th>ID</th>
                     <th>Status</th>
+                    <th>Fecha</th>
                     <th>created_at</th>
                     <th>Opciones</th>
                 </tr>
@@ -183,12 +184,13 @@
                     <td>{{$t->nombre_cliente}}</td>
                     <td>{{$t->valor}}</td>
                     <td>{{$t->email}}</td>
-                    <td>{{$t->fecha}}</td>
+                    <td>{{$t->id_t}}</td>
                     <td>
                         <span class="badge {{ $statusClasses[$t->status] ?? 'text-bg-secondary' }}">
-                            {{ ucfirst($t->status) }}
+                            {{ $t->status }}
                         </span>
                     </td>
+                    <td>{{$t->fecha}}</td>
                     <td>{{$t->created_at}}</td>
                     <td>
                         <div class="dropdown">

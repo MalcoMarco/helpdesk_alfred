@@ -77,11 +77,15 @@
                     
                         <div class="row">
                             <div class="col-md-4 mb-3">
+                                <label for="id" class="form-label">ID</label>
+                                <input type="number" class="form-control" id="id" name="id" value="{{ old('id', $transaccion->id_t) }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
                                 <label for="status" class="form-label">Estado</label>
                                 <select class="form-select" id="status" name="status" required>
-                                    <option value="en proceso" {{ old('status', $transaccion->status) == 'en proceso' ? 'selected' : '' }}>En proceso</option>
-                                    <option value="procesada" {{ old('status', $transaccion->status) == 'procesada' ? 'selected' : '' }}>Procesada</option>
-                                    <option value="rechazada" {{ old('status', $transaccion->status) == 'rechazada' ? 'selected' : '' }}>Rechazada</option>
+                                    <option value="SENT" {{ old('status', $transaccion->status) == 'SENT' ? 'selected' : '' }}>SENT</option>
+                                    <option value="PROCESSED" {{ old('status', $transaccion->status) == 'PROCESSED' ? 'selected' : '' }}>PROCESSED</option>
+                                    <option value="REJECTED" {{ old('status', $transaccion->status) == 'REJECTED' ? 'selected' : '' }}>REJECTED</option>
                                 </select>
                             </div>
                         </div>

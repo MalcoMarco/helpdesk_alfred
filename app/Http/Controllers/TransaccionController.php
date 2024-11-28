@@ -104,7 +104,7 @@ class TransaccionController extends Controller
     public function store(Request $request)
     {
         $this->validate($request,[
-            'transaccion_file' => 'required|file|mimes:xls,xlsx,csv|max:102400',
+            'transaccion_file' => 'required|file|mimes:xls,xlsx,csv,txt|max:102400',
         ]);
         
         try {

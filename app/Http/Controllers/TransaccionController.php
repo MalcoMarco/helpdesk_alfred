@@ -19,14 +19,14 @@ class TransaccionController extends Controller
     
     function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth')->except('indexApi', 'storeApi');
         $this->middleware(function ($request, $next) {
             $user = Auth::user();
             if ($user->role->slug != 'admin') {
                 abort(403);
             }
             return $next($request);
-        });        
+        })->except('indexApi', 'storeApi');        
     }
     public $transaccionStatus = [
         1 => 'En Proceso',
@@ -46,7 +46,7 @@ class TransaccionController extends Controller
             'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
         ]);
 
-        $transaccions = Transaccion::where('id', '>=', 1);
+        $transaccions = Transaccion::where('id', '>=', 1)->orderBy('id');
 
         if (isset($request->numero_de_cuenta)) {
             $transaccions = $transaccions->where(function($q) use($request){
@@ -323,4 +323,109 @@ class TransaccionController extends Controller
         return redirect()->route('transaccion.index')->with('success', 'Transacción actualizada correctamente');
     }
 
+
+
+    /**********************APIII********************/
+
+    public function indexApi(Request $request)
+    {
+        $this->validate($request, [
+            'numero_de_cuenta' => ['nullable', 'string'],
+            'codigo_de_banco' => ['nullable', 'string'],
+            'nombre_del_cliente' => ['nullable', 'string'],
+            'numero_identificacion' => ['nullable', 'string'],
+            'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
+            'fecha_desde' => 'nullable|date_format:Y-m-d',
+            'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
+            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
+        ]);
+
+        $transaccions = Transaccion::select('codigo_banco', 'num_cuenta', 'num_ident', 'tipo_ident', 'nombre_cliente', 'valor', 'email', 'id_t as id_transaccion', 'status', 'fecha', 'created_at')->where('id', '>=', 1)->orderBy('id');
+
+        if (isset($request->numero_de_cuenta)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('num_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
+            });
+        }
+
+        if (isset($request->codigo_de_banco)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('codigo_banco', 'LIKE', '%'.$request->codigo_de_banco.'%');
+            });
+        }
+
+        if (isset($request->numero_identificacion)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('num_ident', 'LIKE', '%'.$request->numero_identificacion.'%');
+            });
+        }
+
+        if (isset($request->tipo_identificacion)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('tipo_ident', $request->tipo_identificacion);
+            });
+        }
+
+        if (isset($request->nombre_del_cliente)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('nombre_cliente', 'LIKE', '%'.$request->nombre_del_cliente.'%');
+            });
+        }
+
+        if (isset($request->fecha_desde)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhereDate('created_at', '>=', $request->fecha_desde);
+            });
+        }
+
+        if (isset($request->fecha_hasta)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhereDate('created_at', '<=', $request->fecha_hasta);
+            });
+        }
+        
+        if (isset($request->status)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('status', $request->status);
+            });
+        }
+
+        $transaccions = $transaccions->paginate(50);
+        $transaccionStatus = $this->transaccionStatus;
+        //return view('transaccions.index', compact('transaccions','transaccionStatus'));
+        return response()->json(['transacciones' => $transaccions]);
+    }
+
+    public function storeApi(Request $request)
+    {
+        $this->validate($request,[
+            'transaccion_file' => 'required|file|mimes:xls,xlsx,csv|max:102400',
+        ]);
+        
+        try {
+
+            $import = new TransaccionsImport();
+            Excel::import($import, $request->file('transaccion_file'));
+
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            //dd($failures);
+            $errors = [];
+            foreach ($failures as $failure) {
+                $rowi = $failure->row(); // row that went wrong
+                $attribute = $failure->attribute(); // either heading key (if using heading row concern) or column index
+                $failure->errors(); // Actual error messages from Laravel validator
+                //dd($failure->values()); // The values of the row that has failed.
+                $e_m = $failure->errors();
+                array_unshift($e_m, 'Error en la fila '.($rowi).'.');
+                $errors = [$attribute => $e_m];
+            }
+            throw ValidationException::withMessages($errors);
+        }
+        //return redirect()->route('transaccion.index')->with('success', 'Transacciones importadas correctamente');
+        return response()->json(['message' => 'Importación exitosa.']);
+    }
+
 }
+
+

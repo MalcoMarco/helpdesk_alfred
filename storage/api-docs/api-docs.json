@@ -1,0 +1,280 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API para Transacciones",
+        "description": "Descripcion",
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/transacciones": {
+            "get": {
+                "tags": [
+                    "Transacciones"
+                ],
+                "summary": "Obtener lista de transacciones",
+                "description": "Devuelve una lista paginada de transacciones basadas en filtros opcionales.",
+                "operationId": "getTransacciones",
+                "parameters": [
+                    {
+                        "name": "numero_de_cuenta",
+                        "in": "query",
+                        "description": "Número de cuenta del cliente (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "codigo_de_banco",
+                        "in": "query",
+                        "description": "Código del banco asociado (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "nombre_del_cliente",
+                        "in": "query",
+                        "description": "Nombre del cliente (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "numero_identificacion",
+                        "in": "query",
+                        "description": "Número de identificación del cliente (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "tipo_identificacion",
+                        "in": "query",
+                        "description": "Tipo de identificación del cliente: 'P' para pasaporte, 'C' para cédula (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "P",
+                                "C"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fecha_desde",
+                        "in": "query",
+                        "description": "Fecha inicial para filtrar transacciones (formato: YYYY-MM-DD)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "fecha_hasta",
+                        "in": "query",
+                        "description": "Fecha final para filtrar transacciones (formato: YYYY-MM-DD). Debe ser igual o posterior a 'fecha_desde'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Estado de la transacción: 'procesada', 'rechazada' o 'en proceso' (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "procesada",
+                                "rechazada",
+                                "en proceso"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de transacciones obtenida correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "transacciones": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "codigo_banco": {
+                                                        "type": "string"
+                                                    },
+                                                    "num_cuenta": {
+                                                        "type": "string"
+                                                    },
+                                                    "num_ident": {
+                                                        "type": "string"
+                                                    },
+                                                    "tipo_ident": {
+                                                        "type": "string"
+                                                    },
+                                                    "nombre_cliente": {
+                                                        "type": "string"
+                                                    },
+                                                    "valor": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "email": {
+                                                        "type": "string"
+                                                    },
+                                                    "id_transaccion": {
+                                                        "type": "integer"
+                                                    },
+                                                    "status": {
+                                                        "type": "string"
+                                                    },
+                                                    "fecha": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "created_at": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Error de validación en los parámetros de entrada",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/transacciones/store": {
+            "post": {
+                "tags": [
+                    "Transacciones"
+                ],
+                "summary": "Importar transacciones desde un archivo",
+                "description": "Permite cargar un archivo Excel o CSV que contiene las transacciones para ser procesadas e importadas a la base de datos.",
+                "operationId": "importarTransacciones",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "transaccion_file"
+                                ],
+                                "properties": {
+                                    "transaccion_file": {
+                                        "description": "Archivo a importar (formatos permitidos: xls, xlsx, csv, txt; tamaño máximo: 100 MB).",
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Archivo procesado e importado correctamente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Importación exitosa."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Errores de validación en el archivo importado",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Errores de importación."
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "additionalProperties": [
+                                                {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "Error en la fila 5.",
+                                                        "El campo 'valor' es requerido."
+                                                    ],
+                                                    "property": null
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Error en el servidor durante la importación",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Error procesando el archivo."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Transacciones",
+            "description": "Transacciones"
+        }
+    ]
+}

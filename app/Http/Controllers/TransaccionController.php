@@ -33,6 +33,7 @@ class TransaccionController extends Controller
         2 => 'Procesado',
         3 => 'Rechazado',
     ];
+
     public function index(Request $request)
     {
         $this->validate($request, [
@@ -327,6 +328,100 @@ class TransaccionController extends Controller
 
     /**********************APIII********************/
 
+    /**
+ * @OA\Get(
+ *     path="/api/transacciones",
+ *     summary="Obtener lista de transacciones",
+ *     description="Devuelve una lista paginada de transacciones basadas en filtros opcionales.",
+ *     operationId="getTransacciones",
+ *     tags={"Transacciones"},
+ *     @OA\Parameter(
+ *         name="numero_de_cuenta",
+ *         in="query",
+ *         description="Número de cuenta del cliente (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="codigo_de_banco",
+ *         in="query",
+ *         description="Código del banco asociado (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="nombre_del_cliente",
+ *         in="query",
+ *         description="Nombre del cliente (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="numero_identificacion",
+ *         in="query",
+ *         description="Número de identificación del cliente (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string")
+ *     ),
+ *     @OA\Parameter(
+ *         name="tipo_identificacion",
+ *         in="query",
+ *         description="Tipo de identificación del cliente: 'P' para pasaporte, 'C' para cédula (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string", enum={"P", "C"})
+ *     ),
+ *     @OA\Parameter(
+ *         name="fecha_desde",
+ *         in="query",
+ *         description="Fecha inicial para filtrar transacciones (formato: YYYY-MM-DD)",
+ *         required=false,
+ *         @OA\Schema(type="string", format="date")
+ *     ),
+ *     @OA\Parameter(
+ *         name="fecha_hasta",
+ *         in="query",
+ *         description="Fecha final para filtrar transacciones (formato: YYYY-MM-DD). Debe ser igual o posterior a 'fecha_desde'",
+ *         required=false,
+ *         @OA\Schema(type="string", format="date")
+ *     ),
+ *     @OA\Parameter(
+ *         name="status",
+ *         in="query",
+ *         description="Estado de la transacción: 'procesada', 'rechazada' o 'en proceso' (filtro opcional)",
+ *         required=false,
+ *         @OA\Schema(type="string", enum={"procesada", "rechazada", "en proceso"})
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Lista de transacciones obtenida correctamente",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="transacciones", type="array",
+ *                 @OA\Items(
+ *                     @OA\Property(property="codigo_banco", type="string"),
+ *                     @OA\Property(property="num_cuenta", type="string"),
+ *                     @OA\Property(property="num_ident", type="string"),
+ *                     @OA\Property(property="tipo_ident", type="string"),
+ *                     @OA\Property(property="nombre_cliente", type="string"),
+ *                     @OA\Property(property="valor", type="number", format="float"),
+ *                     @OA\Property(property="email", type="string"),
+ *                     @OA\Property(property="id_transaccion", type="integer"),
+ *                     @OA\Property(property="status", type="string"),
+ *                     @OA\Property(property="fecha", type="string", format="date-time"),
+ *                     @OA\Property(property="created_at", type="string", format="date-time")
+ *                 )
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Error de validación en los parámetros de entrada",
+ *         @OA\JsonContent(
+ *             @OA\Property(property="message", type="string")
+ *         )
+ *     )
+ * )
+ */
     public function indexApi(Request $request)
     {
         $this->validate($request, [
@@ -396,10 +491,69 @@ class TransaccionController extends Controller
         return response()->json(['transacciones' => $transaccions]);
     }
 
+    /**
+ * @OA\Post(
+ *     path="/api/transacciones/store",
+ *     summary="Importar transacciones desde un archivo",
+ *     description="Permite cargar un archivo Excel o CSV que contiene las transacciones para ser procesadas e importadas a la base de datos.",
+ *     operationId="importarTransacciones",
+ *     tags={"Transacciones"},
+ *     @OA\RequestBody(
+ *         required=true,
+ *         @OA\MediaType(
+ *             mediaType="multipart/form-data",
+ *             @OA\Schema(
+ *                 @OA\Property(
+ *                     property="transaccion_file",
+ *                     type="string",
+ *                     format="binary",
+ *                     description="Archivo a importar (formatos permitidos: xls, xlsx, csv, txt; tamaño máximo: 100 MB)."
+ *                 ),
+ *                 required={"transaccion_file"}
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=200,
+ *         description="Archivo procesado e importado correctamente",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Importación exitosa.")
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=422,
+ *         description="Errores de validación en el archivo importado",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Errores de importación."),
+ *             @OA\Property(
+ *                 property="errors",
+ *                 type="object",
+ *                 additionalProperties={
+ *                     @OA\Property(
+ *                         type="array",
+ *                         @OA\Items(type="string"),
+ *                         example={"Error en la fila 5.", "El campo 'valor' es requerido."}
+ *                     )
+ *                 }
+ *             )
+ *         )
+ *     ),
+ *     @OA\Response(
+ *         response=400,
+ *         description="Error en el servidor durante la importación",
+ *         @OA\JsonContent(
+ *             type="object",
+ *             @OA\Property(property="message", type="string", example="Error procesando el archivo.")
+ *         )
+ *     )
+ * )
+ */
     public function storeApi(Request $request)
     {
         $this->validate($request,[
-            'transaccion_file' => 'required|file|mimes:xls,xlsx,csv|max:102400',
+            'transaccion_file' => 'required|file|mimes:xls,xlsx,csv,txt|max:102400',
         ]);
         
         try {
@@ -420,10 +574,12 @@ class TransaccionController extends Controller
                 array_unshift($e_m, 'Error en la fila '.($rowi).'.');
                 $errors = [$attribute => $e_m];
             }
-            throw ValidationException::withMessages($errors);
+            //throw ValidationException::withMessages($errors);
+
+            return response()->json(['message' => 'Errores de importación.', 'errors' => $errors], 422);
         }
         //return redirect()->route('transaccion.index')->with('success', 'Transacciones importadas correctamente');
-        return response()->json(['message' => 'Importación exitosa.']);
+        return response()->json(['message' => 'Importación exitosa.'], 200);
     }
 
 }

@@ -104,11 +104,13 @@
     <h4 class="text-center">Tabla de transacciones</h4>
     @if(sizeof($transaccions)>0)
     <div class="w-100 text-end mb-1">
-            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                Exportar
-            </button>            
-        </div>
+        <a href="/api/documentation" class="btn btn-primary text-end" target="_blank">Ver APIs</a>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            Exportar
+        </button>            
+    </div>
     @endif
+
     <!-- Modal -->
 <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">

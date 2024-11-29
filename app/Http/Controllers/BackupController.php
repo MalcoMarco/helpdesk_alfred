@@ -68,6 +68,7 @@ class BackupController extends Controller {
             Artisan::call('optimize');
             Artisan::call('cache:clear');
             Artisan::call('route:cache');
+            Artisan::call('route:clear');
             Artisan::call('view:clear');
             Artisan::call('config:cache');
             Artisan::call('clear-compiled');

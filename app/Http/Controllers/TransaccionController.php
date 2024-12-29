@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\TransaccionsImport;
 use App\Models\Transaccion;
+use App\Models\Datatransaccion;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Mail;
 use App\Exports\TransaccionsExport;
@@ -47,11 +48,11 @@ class TransaccionController extends Controller
             'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
         ]);
 
-        $transaccions = Transaccion::where('id', '>=', 1)->orderBy('id');
+        $transaccions = Datatransaccion::orderBy('id');
 
         if (isset($request->numero_de_cuenta)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('num_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
+                $q->orWhere('no_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
             });
         }
 
@@ -63,13 +64,13 @@ class TransaccionController extends Controller
 
         if (isset($request->numero_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('num_ident', 'LIKE', '%'.$request->numero_identificacion.'%');
+                $q->orWhere('numero_identificacion', 'LIKE', '%'.$request->numero_identificacion.'%');
             });
         }
 
         if (isset($request->tipo_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('tipo_ident', $request->tipo_identificacion);
+                $q->orWhere('tipo_identificacion', $request->tipo_identificacion);
             });
         }
 
@@ -93,7 +94,7 @@ class TransaccionController extends Controller
         
         if (isset($request->status)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('status', $request->status);
+                $q->orWhere('status_report', $request->status);
             });
         }
 
@@ -109,24 +110,21 @@ class TransaccionController extends Controller
         ]);
         
         try {
-
             $import = new TransaccionsImport();
             Excel::import($import, $request->file('transaccion_file'));
 
         } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
-            //dd($failures);
             $errors = [];
-            foreach ($failures as $failure) {
-                $rowi = $failure->row(); // row that went wrong
+            foreach ($failures as $index => $failure) {        
+                $row = $failure->row(); // row that went wrong
                 $attribute = $failure->attribute(); // either heading key (if using heading row concern) or column index
-                $failure->errors(); // Actual error messages from Laravel validator
-                //dd($failure->values()); // The values of the row that has failed.
-                $e_m = $failure->errors();
-                array_unshift($e_m, 'Error en la fila '.($rowi).'.');
-                $errors = [$attribute => $e_m];
+                $errorMessages = $failure->errors(); // Actual error messages from Laravel validator
+                foreach ($errorMessages as $errorMessage) {
+                    $errors[] = "Error en la fila $row, columna $attribute: $errorMessage valor: ".$failure->values()[$index];
+                }
             }
-            throw ValidationException::withMessages($errors);
+            throw ValidationException::withMessages(['transaccion_file' => $errors]);
         }
         return redirect()->route('transaccion.index')->with('success', 'Transacciones importadas correctamente');
     }
@@ -182,23 +180,23 @@ class TransaccionController extends Controller
 
         }elseif($request->type_file == 'pdf'){
 
-            $transaccions = Transaccion::select(
-                'num_cuenta',
+            $transaccions = Datatransaccion::select(
+                'no_cuenta',
                 'codigo_banco',
-                'num_ident',
-                'tipo_ident',
+                'numero_identificacion',
+                'tipo_identificacion',
                 'nombre_cliente',
-                'valor',
-                'email',
-                'id_t',
-                'status',
-                'fecha',
+                'valor_transaccion',
+                'email_beneficiario',
+                'transacctionid',
+                'status_report',
+                'date_trasaction',
                 DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
             );
 
             if (isset($consultas['numero_de_cuenta'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('num_cuenta', 'LIKE', '%'.$consultas['numero_de_cuenta'].'%');
+                    $q->orWhere('no_cuenta', 'LIKE', '%'.$consultas['numero_de_cuenta'].'%');
                 });
             }
 
@@ -210,13 +208,13 @@ class TransaccionController extends Controller
 
             if (isset($consultas['numero_identificacion'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('num_ident', 'LIKE', '%'.$consultas['numero_identificacion'].'%');
+                    $q->orWhere('numero_identificacion', 'LIKE', '%'.$consultas['numero_identificacion'].'%');
                 });
             }
 
             if (isset($consultas['tipo_identificacion'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('tipo_ident', $consultas['tipo_identificacion']);
+                    $q->orWhere('tipo_identificacion', $consultas['tipo_identificacion']);
                 });
             }
 
@@ -240,7 +238,7 @@ class TransaccionController extends Controller
 
             if (isset($consultas['status'])) {
                 $transaccions = $transaccions->where(function($q) use($consultas){
-                    $q->orWhere('status', $consultas['status']);
+                    $q->orWhere('status_report', $consultas['status']);
                 });
             }
 
@@ -250,7 +248,7 @@ class TransaccionController extends Controller
 
             $pdf = Pdf::loadView('transaccions.pdf.reporte_pdf', ['transaccions' => $transaccions, 'fecha' => $fecha])->setPaper('a4', 'landscape');
 
-            $name2 = 'Reporte Transacciones_'.$time.'.pdf';
+            $name2 = 'Transacciones_'.$time.'.pdf';
             if ($request->email_to) {
 
                 $pdfOutput = $pdf->output();
@@ -281,13 +279,13 @@ class TransaccionController extends Controller
         return view('errors.404');
     }
 
-    public function destroy(Transaccion $transaccion)
+    public function destroy(Datatransaccion $transaccion)
     {
         $transaccion->delete();
         return redirect()->route('transaccion.index')->with('success', 'Transacción eliminada correctamente');
     }
 
-    public function edit(Transaccion $transaccion)
+    public function edit(Datatransaccion $transaccion)
     {
         $transaccionStatus = $this->transaccionStatus;
         return view('transaccions.edit', compact('transaccion', 'transaccionStatus'));
@@ -296,18 +294,6 @@ class TransaccionController extends Controller
     public function update(Request $request, Transaccion $transaccion)
     {
         $this->validate($request, [
-            /*'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'],
-            'codigo_banco' => ['required', 'string', 'max:200'],
-            'tipo_cuenta' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],
-            'nombre_cliente' => ['required', 'string', 'max:100'],
-            'tipo_movimiento' => ['required', Rule::in(['D', 'C'])],
-            'monto' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],
-            'referencia' => ['nullable', 'alpha_num:ascii', 'max:15'],
-            'descripcion' => ['nullable', 'string', 'max:80'],
-            'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],
-            'fax' => ['nullable', 'string', 'max:100'],
-            'status' => ['required', Rule::in([1, 2, 3])],*/
-
             'codigo_banco' => ['required', 'string', 'max:255'],//codigo_banco
             'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'], //num_cuenta
             'num_ident' => ['required', 'alpha_num:ascii', 'max:30'], //num_ident
@@ -329,99 +315,99 @@ class TransaccionController extends Controller
     /**********************APIII********************/
 
     /**
- * @OA\Get(
- *     path="/api/transacciones",
- *     summary="Obtener lista de transacciones",
- *     description="Devuelve una lista paginada de transacciones basadas en filtros opcionales.",
- *     operationId="getTransacciones",
- *     tags={"Transacciones"},
- *     @OA\Parameter(
- *         name="numero_de_cuenta",
- *         in="query",
- *         description="Número de cuenta del cliente (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="codigo_de_banco",
- *         in="query",
- *         description="Código del banco asociado (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="nombre_del_cliente",
- *         in="query",
- *         description="Nombre del cliente (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="numero_identificacion",
- *         in="query",
- *         description="Número de identificación del cliente (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string")
- *     ),
- *     @OA\Parameter(
- *         name="tipo_identificacion",
- *         in="query",
- *         description="Tipo de identificación del cliente: 'P' para pasaporte, 'C' para cédula (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string", enum={"P", "C"})
- *     ),
- *     @OA\Parameter(
- *         name="fecha_desde",
- *         in="query",
- *         description="Fecha inicial para filtrar transacciones (formato: YYYY-MM-DD)",
- *         required=false,
- *         @OA\Schema(type="string", format="date")
- *     ),
- *     @OA\Parameter(
- *         name="fecha_hasta",
- *         in="query",
- *         description="Fecha final para filtrar transacciones (formato: YYYY-MM-DD). Debe ser igual o posterior a 'fecha_desde'",
- *         required=false,
- *         @OA\Schema(type="string", format="date")
- *     ),
- *     @OA\Parameter(
- *         name="status",
- *         in="query",
- *         description="Estado de la transacción: 'procesada', 'rechazada' o 'en proceso' (filtro opcional)",
- *         required=false,
- *         @OA\Schema(type="string", enum={"procesada", "rechazada", "en proceso"})
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Lista de transacciones obtenida correctamente",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="transacciones", type="array",
- *                 @OA\Items(
- *                     @OA\Property(property="codigo_banco", type="string"),
- *                     @OA\Property(property="num_cuenta", type="string"),
- *                     @OA\Property(property="num_ident", type="string"),
- *                     @OA\Property(property="tipo_ident", type="string"),
- *                     @OA\Property(property="nombre_cliente", type="string"),
- *                     @OA\Property(property="valor", type="number", format="float"),
- *                     @OA\Property(property="email", type="string"),
- *                     @OA\Property(property="id_transaccion", type="integer"),
- *                     @OA\Property(property="status", type="string"),
- *                     @OA\Property(property="fecha", type="string", format="date-time"),
- *                     @OA\Property(property="created_at", type="string", format="date-time")
- *                 )
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Error de validación en los parámetros de entrada",
- *         @OA\JsonContent(
- *             @OA\Property(property="message", type="string")
- *         )
- *     )
- * )
- */
+     * @OA\Get(
+     *     path="/api/transacciones",
+     *     summary="Obtener lista de transacciones",
+     *     description="Devuelve una lista paginada de transacciones basadas en filtros opcionales.",
+     *     operationId="getTransacciones",
+     *     tags={"Transacciones"},
+     *     @OA\Parameter(
+     *         name="numero_de_cuenta",
+     *         in="query",
+     *         description="Número de cuenta del cliente (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="codigo_de_banco",
+     *         in="query",
+     *         description="Código del banco asociado (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="nombre_del_cliente",
+     *         in="query",
+     *         description="Nombre del cliente (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="numero_identificacion",
+     *         in="query",
+     *         description="Número de identificación del cliente (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="tipo_identificacion",
+     *         in="query",
+     *         description="Tipo de identificación del cliente: 'P' para pasaporte, 'C' para cédula (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"P", "C"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="fecha_desde",
+     *         in="query",
+     *         description="Fecha inicial para filtrar transacciones (formato: YYYY-MM-DD)",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="fecha_hasta",
+     *         in="query",
+     *         description="Fecha final para filtrar transacciones (formato: YYYY-MM-DD). Debe ser igual o posterior a 'fecha_desde'",
+     *         required=false,
+     *         @OA\Schema(type="string", format="date")
+     *     ),
+     *     @OA\Parameter(
+     *         name="status",
+     *         in="query",
+     *         description="Estado de la transacción: 'procesada', 'rechazada' o 'en proceso' (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"procesada", "rechazada", "en proceso"})
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Lista de transacciones obtenida correctamente",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="transacciones", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="codigo_banco", type="string"),
+     *                     @OA\Property(property="no_cuenta", type="string"),
+     *                     @OA\Property(property="numero_identificacion", type="string"),
+     *                     @OA\Property(property="tipo_identificacion", type="string"),
+     *                     @OA\Property(property="nombre_cliente", type="string"),
+     *                     @OA\Property(property="valor_transaccion", type="number", format="float"),
+     *                     @OA\Property(property="email_beneficiario", type="string"),
+     *                     @OA\Property(property="transacctionid", type="integer"),
+     *                     @OA\Property(property="status_report", type="string"),
+     *                     @OA\Property(property="date_trasaction", type="string", format="date-time"),
+     *                     @OA\Property(property="created_at", type="string", format="date-time")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error de validación en los parámetros de entrada",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
     public function indexApi(Request $request)
     {
         $this->validate($request, [
@@ -435,11 +421,11 @@ class TransaccionController extends Controller
             'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
         ]);
 
-        $transaccions = Transaccion::select('codigo_banco', 'num_cuenta', 'num_ident', 'tipo_ident', 'nombre_cliente', 'valor', 'email', 'id_t as id_transaccion', 'status', 'fecha', 'created_at')->where('id', '>=', 1)->orderBy('id');
+        $transaccions = Datatransaccion::select('codigo_banco', 'no_cuenta', 'numero_identificacion', 'tipo_identificacion', 'nombre_cliente', 'valor_transaccion', 'email_beneficiario', 'transacctionid', 'status_report', 'date_trasaction', 'created_at')->where('id', '>=', 1)->orderBy('id');
 
         if (isset($request->numero_de_cuenta)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('num_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
+                $q->orWhere('no_cuenta', 'LIKE', '%'.$request->numero_de_cuenta.'%');
             });
         }
 
@@ -451,13 +437,13 @@ class TransaccionController extends Controller
 
         if (isset($request->numero_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('num_ident', 'LIKE', '%'.$request->numero_identificacion.'%');
+                $q->orWhere('numero_identificacion', 'LIKE', '%'.$request->numero_identificacion.'%');
             });
         }
 
         if (isset($request->tipo_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('tipo_ident', $request->tipo_identificacion);
+                $q->orWhere('tipo_identificacion', $request->tipo_identificacion);
             });
         }
 
@@ -481,7 +467,7 @@ class TransaccionController extends Controller
         
         if (isset($request->status)) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('status', $request->status);
+                $q->orWhere('status_report', $request->status);
             });
         }
 
@@ -492,64 +478,64 @@ class TransaccionController extends Controller
     }
 
     /**
- * @OA\Post(
- *     path="/api/transacciones/store",
- *     summary="Importar transacciones desde un archivo",
- *     description="Permite cargar un archivo Excel o CSV que contiene las transacciones para ser procesadas e importadas a la base de datos.",
- *     operationId="importarTransacciones",
- *     tags={"Transacciones"},
- *     @OA\RequestBody(
- *         required=true,
- *         @OA\MediaType(
- *             mediaType="multipart/form-data",
- *             @OA\Schema(
- *                 @OA\Property(
- *                     property="transaccion_file",
- *                     type="string",
- *                     format="binary",
- *                     description="Archivo a importar (formatos permitidos: xls, xlsx, csv, txt; tamaño máximo: 100 MB)."
- *                 ),
- *                 required={"transaccion_file"}
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=200,
- *         description="Archivo procesado e importado correctamente",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="message", type="string", example="Importación exitosa.")
- *         )
- *     ),
- *     @OA\Response(
- *         response=422,
- *         description="Errores de validación en el archivo importado",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="message", type="string", example="Errores de importación."),
- *             @OA\Property(
- *                 property="errors",
- *                 type="object",
- *                 additionalProperties={
- *                     @OA\Property(
- *                         type="array",
- *                         @OA\Items(type="string"),
- *                         example={"Error en la fila 5.", "El campo 'valor' es requerido."}
- *                     )
- *                 }
- *             )
- *         )
- *     ),
- *     @OA\Response(
- *         response=400,
- *         description="Error en el servidor durante la importación",
- *         @OA\JsonContent(
- *             type="object",
- *             @OA\Property(property="message", type="string", example="Error procesando el archivo.")
- *         )
- *     )
- * )
- */
+     * @OA\Post(
+     *     path="/api/transacciones/store",
+     *     summary="Importar transacciones desde un archivo",
+     *     description="Permite cargar un archivo Excel o CSV que contiene las transacciones para ser procesadas e importadas a la base de datos.",
+     *     operationId="importarTransacciones",
+     *     tags={"Transacciones"},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(
+     *                     property="transaccion_file",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Archivo a importar (formatos permitidos: xls, xlsx, csv, txt; tamaño máximo: 100 MB)."
+     *                 ),
+     *                 required={"transaccion_file"}
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Archivo procesado e importado correctamente",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Importación exitosa.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Errores de validación en el archivo importado",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Errores de importación."),
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="object",
+     *                 additionalProperties={
+     *                     @OA\Property(
+     *                         type="array",
+     *                         @OA\Items(type="string"),
+     *                         example={"Error en la fila 5.", "El campo 'valor' es requerido."}
+     *                     )
+     *                 }
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Error en el servidor durante la importación",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Error procesando el archivo.")
+     *         )
+     *     )
+     * )
+     */
     public function storeApi(Request $request)
     {
         $this->validate($request,[
@@ -561,23 +547,38 @@ class TransaccionController extends Controller
             $import = new TransaccionsImport();
             Excel::import($import, $request->file('transaccion_file'));
 
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        }
+        catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
             $failures = $e->failures();
-            //dd($failures);
             $errors = [];
-            foreach ($failures as $failure) {
-                $rowi = $failure->row(); // row that went wrong
+            foreach ($failures as $index => $failure) {        
+                $row = $failure->row(); // row that went wrong
                 $attribute = $failure->attribute(); // either heading key (if using heading row concern) or column index
-                $failure->errors(); // Actual error messages from Laravel validator
-                //dd($failure->values()); // The values of the row that has failed.
-                $e_m = $failure->errors();
-                array_unshift($e_m, 'Error en la fila '.($rowi).'.');
-                $errors = [$attribute => $e_m];
+                $errorMessages = $failure->errors(); // Actual error messages from Laravel validator
+                foreach ($errorMessages as $errorMessage) {
+                    $errors[] = "Error en la fila $row, columna $attribute: $errorMessage valor: ".$failure->values()[$index];
+                }
             }
-            //throw ValidationException::withMessages($errors);
-
             return response()->json(['message' => 'Errores de importación.', 'errors' => $errors], 422);
         }
+        // catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+        //     $failures = $e->failures();
+        //     //dd($failures);
+        //     $errors = [];
+        //     foreach ($failures as $failure) {
+        //         $rowi = $failure->row(); // row that went wrong
+        //         $attribute = $failure->attribute(); // either heading key (if using heading row concern) or column index
+        //         $failure->errors(); // Actual error messages from Laravel validator
+        //         //dd($failure->values()); // The values of the row that has failed.
+        //         $e_m = $failure->errors();
+        //         array_unshift($e_m, 'Error en la fila '.($rowi).'.');
+        //         $errors = [$attribute => $e_m];
+        //     }
+        //     //throw ValidationException::withMessages($errors);
+
+        //     return response()->json(['message' => 'Errores de importación.', 'errors' => $errors], 422);
+        // }
+        
         //return redirect()->route('transaccion.index')->with('success', 'Transacciones importadas correctamente');
         return response()->json(['message' => 'Importación exitosa.'], 200);
     }

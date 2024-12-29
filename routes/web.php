@@ -44,6 +44,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InstallController;
 
 use App\Http\Controllers\TransaccionController;
+use App\Http\Controllers\DatatransaccionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -94,7 +95,9 @@ Route::prefix('dashboard')->group(function () {
         ->name('dashboard')
         ->middleware('auth');
 
-    Route::prefix('transacciones')->middleware('auth')->group(function(){
+        Route::prefix('transacciones')->middleware('auth')->group(function(){
+        Route::get('modelo2', [DatatransaccionController::class, 'indexPage'])->name('transaccion.modelo2.index');
+        
         Route::get('', [TransaccionController::class, 'index'])->name('transaccion.index');
 
         Route::post('store', [TransaccionController::class, 'store'])->name('transaccion.store');
@@ -104,6 +107,7 @@ Route::prefix('dashboard')->group(function () {
         
         Route::get('{transaccion}',[TransaccionController::class, 'edit'])->name('transaccion.edit');
         Route::delete('{transaccion}', [TransaccionController::class, 'destroy'])->name('transaccion.destroy');
+
         
     });
     

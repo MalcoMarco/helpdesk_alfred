@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\Transaccion;
+use App\Models\Datatransaccion;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Validation\Rule;
@@ -20,110 +20,64 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow, Skips
     public function rules(): array
     {
         return [
-            /*'*.0' => [
-                'required',
-                function ($attribute, $value, $onFailure) use($row) {
-                    // Validar el formato si codigo_de_banco es 'BHD'
-                    if ($row[1] === 'BHD') {
-                        if (!preg_match('/^\d{8}-\d{3}-\d{1}$/', $value)) {
-                            $onFailure('El formato debe ser ########-###-# para el banco BHD.');
-                        }
-                    } else {
-                        if (strlen($value) > 34){
-                            // Validar longitud máxima para otros BANCOS
-                            $onFailure('El número de cuenta no puede tener más de 34 dígitos.');
-                        }
-                        if (!typeof($value) !== 'integer') {
-                            $onFailure('El :attribute sólo acepta números.');
-                        }
-                    }
-                },
-            ],*/
-            /*'*.0' => ['required', 'regex:/^\d{1,34}$/'],//'num_cuenta'
-            '*.1' => ['required', 'string', 'max:200'],//'codigo_banco'
-            '*.2' => ['required', Rule::in(['CC', 'CA', 'TJ', 'PR'])],//'tipo_cuenta'
-            '*.3' => ['required', 'string', 'max:100'],//'nombre_cliente'
-            '*.4' => ['required', Rule::in(['D', 'C'])],//'tipo_movimiento'
-            '*.5' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'],// monto
-            '*.6' => ['nullable', 'alpha_num:ascii', 'max:15'],// referencia
-            '*.7' => ['nullable', 'string', 'max:80'],// descripcion
-            '*.8' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],// email
-            '*.9' => ['nullable', 'alpha_num', 'max:100'],// fax*/
-
-            '*.0' => ['required', 'string', 'max:255'],//codigo_banco
-            '*.1' => ['required', 'regex:/^\d{1,34}$/'], //num_cuenta
-            '*.2' => ['required', 'alpha_num:ascii', 'max:30'], //num_ident
-            '*.3' => ['required', Rule::in(['C', 'P'])], //tipo_ident
-            '*.4' => ['required', 'string', 'max:100'], //nombre_cliente
-            '*.5' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'], //valor: hasta 15 digitos con 2 decimales
-            '*.6' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'],
-            '*.7' => ['required', 'integer'],
-            '*.8' => ['required', Rule::in(['PROCESSED', 'REJECTED', 'SENT'])],
-            '*.9' => ['required', 'date_format:Y-m-d'],
+            '*.0' => ['required', Rule::unique('datatransaccions', 'withdrawid')], // withdrawid
+            '*.1' => 'required', // no_cuenta
+            '*.2' => 'required', // codigo_banco
+            '*.3' => ['required'], // tipo_cuenta
+            '*.4' => 'required', // nombre_cliente
+            '*.5' => 'required', // tipo_movimiento
+            '*.6' => 'required', // valor_transaccion
+            '*.7' => 'nullable', // referencia_transaccion
+            '*.8' => 'nullable', // descripcion_transaccion
+            '*.9' => 'nullable', // email_beneficiario
+            '*.10' => ['required'], // tipo_identificacion    Rule::in(['C', 'P'])]
+            '*.11' => 'required', // numero_identificacion
+            '*.12' => ['required'], // status_report  , Rule::in(['PROCESSED', 'REJECTED', 'SENT'])
+            '*.13' => 'required', // date_trasaction
+            '*.14' => ['required', Rule::unique('datatransaccions', 'transacctionid')], // transacctionid
         ];
+    }
+
+    public function model(array $row)
+    {
+        return new Datatransaccion([
+            'withdrawid' => $row[0],
+            'no_cuenta' => $row[1],
+            'codigo_banco' => $row[2],
+            'tipo_cuenta' => $row[3],
+            'nombre_cliente' => $row[4],
+            'tipo_movimiento' => $row[5],
+            'valor_transaccion' => $row[6],
+            'referencia_transaccion' => $row[7],
+            'descripcion_transaccion' => $row[8],
+            'email_beneficiario' => $row[9],
+            'tipo_identificacion' => $row[10],
+            'numero_identificacion' => $row[11],
+            'status_report' => $row[12],
+            'date_trasaction' => Carbon::parse($row[13]),
+            'transacctionid' => $row[14],
+        ]);
     }
 
     public function customValidationAttributes()
     {
         return [
-            /*'0' => 'Número de cuenta',
-            '1' => 'Código de Banco',
-            '2' => 'Tipo de Cuenta',
-            '3' => 'Nombre del Cliente',
-            '4' => 'Tipo de Movimiento',
-            '5' => 'Monto de transacción',
-            '6' => 'Número de referencia',
-            '7' => 'Descripción',
-            '8' => 'Email',
-            '9' => 'Fax',*/
-
-            '0' => 'Codigo Banco',
-            '1' => 'Número de Cuenta',
-            '2' => 'Número Identificación',
-            '3' => 'Tipo Identificación',
-            '4' => 'Nombre del Cliente',
-            '5' => 'Valor Transacción',
-            '6' => 'Email Beneficiario',
-            '7' => 'ID',
-            '8' => 'Estado',
-            '9' => 'Fecha',
-         ];
-    }
-
-    public function model(array $row)
-    {
-        return new Transaccion([
-            'codigo_banco' => $row[0],
-            'num_cuenta' => $row[1],
-            'num_ident' => $row[2],
-            'tipo_ident' => $row[3],
-            'nombre_cliente' => $row[4],
-            'valor' => $row[5],
-            'email' => $row[6],
-            'id_t' => $row[7],
-            'status' => $row[8],
-            'fecha' => $row[9],
-
-            /*'num_cuenta' => $row[0],
-            'codigo_banco' => $row[1],
-            'tipo_cuenta' => $row[2],
-            'nombre_cliente' => $row[3],
-            'tipo_movimiento' => $row[4],
-            'monto' => $row[5],
-            'referencia' => $row[6],
-            'descripcion' => $row[7],
-            'email' => $row[8],
-            'fax' => $row[9]*/
-        ]);
-    }
-
-    public function prepareForValidation($data, $index)
-    {
-        
-        //$data['8'] = strtolower($data['8']); // el status a minusculas
-        $data['9'] = is_numeric($data['9']) ? Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($data['9']))->format('Y-m-d') : $data['9']; // la fecha si es entera a fecha normal
-        
-        return $data;
+            '0' => 'withdrawid',
+            '1' => 'no_cuenta',
+            '2' => 'codigo_banco',
+            '3' => 'tipo_cuenta',
+            '4' => 'nombre_cliente',
+            '5' => 'tipo_movimiento',
+            '6' => 'valor_transaccion',
+            '7' => 'referencia_transaccion',
+            '8' => 'descripcion_transaccion',
+            '9' => 'email_beneficiario',
+            '10' => 'tipo_identificacion',
+            '11' => 'numero_identificacion',
+            '12' => 'status_report',
+            '13' => 'date_trasaction',
+            '14' => 'transacctionid',
+        ];
     }
 
     public function startRow(): int

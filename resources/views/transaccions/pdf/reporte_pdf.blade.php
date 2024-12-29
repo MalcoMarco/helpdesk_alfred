@@ -118,15 +118,15 @@
 	        @foreach($transaccions as $key => $t)
 	        <tr>
                 <td>{{$t->codigo_banco}}</td>
-	            <td>{{$t->num_cuenta}}</td>
-	            <td>{{$t->num_ident}}</td>
-	            <td>{{$t->tipo_ident}}</td>
+	            <td>{{$t->no_cuenta}}</td>
+	            <td>{{$t->numero_identificacion}}</td>
+	            <td>{{$t->tipo_identificacion}}</td>
                 <td>{{$t->nombre_cliente}}</td>
-	            <td class="amount">{{$t->valor}}</td>
-	            <td>{{$t->email}}</td>
-                <td>{{$t->id_t}}</td>
-                <td>{{$t->status}}</td>
-	            <td>{{$t->fecha}}</td>
+	            <td class="amount">{{$t->valor_transaccion}}</td>
+	            <td>{{$t->email_beneficiario}}</td>
+                <td>{{$t->transacctionid}}</td>
+                <td>{{$t->status_report}}</td>
+	            <td>{{$t->date_trasaction}}</td>
 	            <td>{{$t->formatted_date}}</td>
 	        </tr>
 	        @endforeach	       

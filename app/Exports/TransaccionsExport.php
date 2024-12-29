@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Transaccion;
+use App\Models\Datatransaccion;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
@@ -55,25 +55,25 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
     public function collection()
     {
-        $transaccions = Transaccion::select(
+        $transaccions = Datatransaccion::select(
             'codigo_banco',
-            'num_cuenta',
-            'num_ident',
-            'tipo_ident',
+            'no_cuenta',
+            'numero_identificacion',
+            'tipo_identificacion',
             'nombre_cliente',
-            'valor',
-            'email',
-            'id_t',
-            'status',
+            'valor_transaccion',
+            'email_beneficiario',
+            'transacctionid',
+            'status_report',
             //DB::raw("CONCAT(UPPER(SUBSTRING(status, 1, 1)), LOWER(SUBSTRING(status, 2))) AS status"),
-            'fecha',
+            'date_trasaction',
             DB::raw("DATE_FORMAT(created_at, '%d/%m/%Y %H:%i:%s') as formatted_date"),
 
         );
 
         if (isset($this->consultas['numero_de_cuenta'])) {
             $transaccions = $transaccions->where(function($q){
-                $q->orWhere('num_cuenta', 'LIKE', '%'.$this->consultas['numero_de_cuenta'].'%');
+                $q->orWhere('no_cuenta', 'LIKE', '%'.$this->consultas['numero_de_cuenta'].'%');
             });
         }
 
@@ -85,13 +85,13 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
         if (isset($this->consultas['numero_identificacion'])) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('num_ident', 'LIKE', '%'.$this->consultas['numero_identificacion'].'%');
+                $q->orWhere('numero_identificacion', 'LIKE', '%'.$this->consultas['numero_identificacion'].'%');
             });
         }
 
         if (isset($this->consultas['tipo_identificacion'])) {
             $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('tipo_ident', $this->consultas['tipo_identificacion']);
+                $q->orWhere('tipo_identificacion', $this->consultas['tipo_identificacion']);
             });
         }
 
@@ -115,7 +115,7 @@ class TransaccionsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
         if (isset($this->consultas['status'])) {
             $transaccions = $transaccions->where(function($q){
-                $q->orWhere('status', $this->consultas['status']);
+                $q->orWhere('status_report', $this->consultas['status']);
             });
         }
 

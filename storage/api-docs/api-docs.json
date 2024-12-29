@@ -113,32 +113,32 @@
                                                     "codigo_banco": {
                                                         "type": "string"
                                                     },
-                                                    "num_cuenta": {
+                                                    "no_cuenta": {
                                                         "type": "string"
                                                     },
-                                                    "num_ident": {
+                                                    "numero_identificacion": {
                                                         "type": "string"
                                                     },
-                                                    "tipo_ident": {
+                                                    "tipo_identificacion": {
                                                         "type": "string"
                                                     },
                                                     "nombre_cliente": {
                                                         "type": "string"
                                                     },
-                                                    "valor": {
+                                                    "valor_transaccion": {
                                                         "type": "number",
                                                         "format": "float"
                                                     },
-                                                    "email": {
+                                                    "email_beneficiario": {
                                                         "type": "string"
                                                     },
-                                                    "id_transaccion": {
+                                                    "transacctionid": {
                                                         "type": "integer"
                                                     },
-                                                    "status": {
+                                                    "status_report": {
                                                         "type": "string"
                                                     },
-                                                    "fecha": {
+                                                    "date_trasaction": {
                                                         "type": "string",
                                                         "format": "date-time"
                                                     },

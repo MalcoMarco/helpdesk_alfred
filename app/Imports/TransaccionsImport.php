@@ -20,7 +20,7 @@ class TransaccionsImport implements ToModel, WithValidation, WithStartRow, Skips
     public function rules(): array
     {
         return [
-            '*.0' => ['required', Rule::unique('datatransaccions', 'withdrawid')], // withdrawid
+            '*.0' => ['nullable'], // withdrawid //, Rule::unique('datatransaccions', 'withdrawid')
             '*.1' => 'required', // no_cuenta
             '*.2' => 'required', // codigo_banco
             '*.3' => ['required'], // tipo_cuenta

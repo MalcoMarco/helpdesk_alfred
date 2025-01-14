@@ -322,6 +322,13 @@ class TransaccionController extends Controller
      *     operationId="getTransacciones",
      *     tags={"Transacciones"},
      *     @OA\Parameter(
+     *         name="transacctionid",
+     *         in="query",
+     *         description="transacctionid (filtro opcional)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
      *         name="numero_de_cuenta",
      *         in="query",
      *         description="Número de cuenta del cliente (filtro opcional)",
@@ -391,7 +398,7 @@ class TransaccionController extends Controller
      *                     @OA\Property(property="nombre_cliente", type="string"),
      *                     @OA\Property(property="valor_transaccion", type="number", format="float"),
      *                     @OA\Property(property="email_beneficiario", type="string"),
-     *                     @OA\Property(property="transacctionid", type="integer"),
+     *                     @OA\Property(property="transacctionid", type="string"),
      *                     @OA\Property(property="status_report", type="string"),
      *                     @OA\Property(property="date_trasaction", type="string", format="date-time"),
      *                     @OA\Property(property="created_at", type="string", format="date-time")
@@ -415,6 +422,7 @@ class TransaccionController extends Controller
             'codigo_de_banco' => ['nullable', 'string'],
             'nombre_del_cliente' => ['nullable', 'string'],
             'numero_identificacion' => ['nullable', 'string'],
+            'transacctionid' => ['nullable', 'string'],
             'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
@@ -438,6 +446,12 @@ class TransaccionController extends Controller
         if (isset($request->numero_identificacion)) {
             $transaccions = $transaccions->where(function($q) use($request){
                 $q->orWhere('numero_identificacion', 'LIKE', '%'.$request->numero_identificacion.'%');
+            });
+        }
+        
+        if (isset($request->transacctionid)) {
+            $transaccions = $transaccions->where(function($q) use($request){
+                $q->orWhere('transacctionid', 'LIKE', '%'.$request->transacctionid.'%');
             });
         }
 
@@ -466,13 +480,25 @@ class TransaccionController extends Controller
         }
         
         if (isset($request->status)) {
-            $transaccions = $transaccions->where(function($q) use($request){
-                $q->orWhere('status_report', $request->status);
+            $status = "";
+            switch ($request->status) {
+                case 'procesada':
+                    $status = "PROCESSED";
+                    break;
+                case 'rechazada':
+                    $status = "REJECTED";
+                    break;
+                case 'en proceso':
+                    $status = "PENDING";
+                    break;
+            }
+            $transaccions = $transaccions->where(function($q) use($status){
+                $q->orWhere('status_report', $status);
             });
         }
 
         $transaccions = $transaccions->paginate(50);
-        $transaccionStatus = $this->transaccionStatus;
+        //$transaccionStatus = $this->transaccionStatus;
         //return view('transaccions.index', compact('transaccions','transaccionStatus'));
         return response()->json(['transacciones' => $transaccions]);
     }

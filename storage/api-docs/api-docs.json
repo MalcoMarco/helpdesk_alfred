@@ -16,6 +16,15 @@
                 "operationId": "getTransacciones",
                 "parameters": [
                     {
+                        "name": "transacctionid",
+                        "in": "query",
+                        "description": "transacctionid (filtro opcional)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "numero_de_cuenta",
                         "in": "query",
                         "description": "Número de cuenta del cliente (filtro opcional)",
@@ -133,7 +142,7 @@
                                                         "type": "string"
                                                     },
                                                     "transacctionid": {
-                                                        "type": "integer"
+                                                        "type": "string"
                                                     },
                                                     "status_report": {
                                                         "type": "string"

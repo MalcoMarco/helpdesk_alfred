@@ -2,9 +2,11 @@
 @section('content')
 <div class="container py-3 px-5">
     <h3 class="mb-3 text-center">EDITAR TRANSACCIÓN</h3>
-
+<p>
+    <a href="{{route('transaccion.index')}}">Volver</a>
+</p>
     <div class="row justify-content-center">
-        <div class="col-lg-9">
+        <div class="col-lg-11">
             <div class="card">
                 <div class="card-body">
                     <div class="w-100 mt-3">
@@ -25,72 +27,77 @@
                     </div> 
                     <form method="POST" action="{{ @route('transaccion.update', $transaccion->id) }}">
                         @csrf
-                        @method('PUT')
-                    
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="codigo_banco" class="form-label">Código del Banco</label>
-                                <input type="text" class="form-control" id="codigo_banco" name="codigo_banco" value="{{ old('codigo_banco', $transaccion->codigo_banco) }}" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="num_cuenta" class="form-label">Número de Cuenta</label>
-                                <input type="text" class="form-control" id="num_cuenta" name="num_cuenta" value="{{ old('num_cuenta', $transaccion->num_cuenta) }}" required>
-                            </div>
-
-                            <div class="col-md-4 mb-3">
-                                <label for="num_ident" class="form-label">Número de Identificación</label>
-                                <input type="text" class="form-control" id="num_ident" name="num_ident" value="{{ old('num_ident', $transaccion->num_ident) }}" required>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label for="tipo_ident" class="form-label">Tipo de Identificación</label>
-                                <select class="form-select" id="tipo_ident" name="tipo_ident" required>
-                                    <option value="C" {{ old('tipo_ident', $transaccion->tipo_ident) == 'C' ? 'selected' : '' }}>C</option>
-                                    <option value="P" {{ old('tipo_ident', $transaccion->tipo_ident) == 'P' ? 'selected' : '' }}>P</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3 col-md-8">
-                                <label for="nombre_cliente" class="form-label">Nombre del Cliente</label>
-                                <input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" value="{{ old('nombre_cliente', $transaccion->nombre_cliente) }}" required>
-                            </div>
+                        @method('PUT')                    
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="withdrawid" class="form-label">withdrawid</label>
+                            <input type="number" class="form-control" id="withdrawid" name="withdrawid" value="{{ $transaccion->withdrawid}}">
                         </div>
-                    
-                        
-                    
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="valor" class="form-label">Valor</label>
-                                <input type="number" class="form-control" id="valor" name="valor" value="{{ old('valor', $transaccion->valor) }}" required>
-                            </div>
-                            
-                            <div class="col-md-4 mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="text" class="form-control" id="email" name="email" value="{{ old('email', $transaccion->email) }}" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="fecha" class="form-label">Fecha</label>
-                                <input type="date" class="form-control" id="fecha" name="fecha" value="{{ old('fecha', $transaccion->fecha) }}" required>
-                            </div>
-
+                        <div class="col-md-4 mb-3">
+                            <label for="no_cuenta" class="form-label">no_cuenta</label>
+                            <input type="text" class="form-control" id="no_cuenta" name="no_cuenta" value="{{ $transaccion->no_cuenta }}">
                         </div>
-                    
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label for="id" class="form-label">ID</label>
-                                <input type="number" class="form-control" id="id" name="id" value="{{ old('id', $transaccion->id_t) }}" required>
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label for="status" class="form-label">Estado</label>
-                                <select class="form-select" id="status" name="status" required>
-                                    <option value="SENT" {{ old('status', $transaccion->status) == 'SENT' ? 'selected' : '' }}>SENT</option>
-                                    <option value="PROCESSED" {{ old('status', $transaccion->status) == 'PROCESSED' ? 'selected' : '' }}>PROCESSED</option>
-                                    <option value="REJECTED" {{ old('status', $transaccion->status) == 'REJECTED' ? 'selected' : '' }}>REJECTED</option>
-                                </select>
-                            </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="codigo_banco" class="form-label">codigo_banco</label>
+                            <input type="text" class="form-control" id="codigo_banco" name="codigo_banco" value="{{ $transaccion->codigo_banco }}">
                         </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_cuenta" class="form-label">tipo_cuenta</label>
+                            <input type="text" class="form-control" id="tipo_cuenta" name="tipo_cuenta" value="{{ $transaccion->tipo_cuenta }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="nombre_cliente" class="form-label">nombre_cliente</label>
+                            <input type="text" class="form-control" id="nombre_cliente" name="nombre_cliente" value="{{ $transaccion->nombre_cliente }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_movimiento" class="form-label">tipo_movimiento</label>
+                            <input type="text" class="form-control" id="tipo_movimiento" name="tipo_movimiento" value="{{ $transaccion->tipo_movimiento }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="valor_transaccion" class="form-label">valor_transaccion</label>
+                            <input type="number" class="form-control" id="valor_transaccion" name="valor_transaccion" value="{{ $transaccion->valor_transaccion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="referencia_transaccion" class="form-label">referencia_transaccion</label>
+                            <input type="text" class="form-control" id="referencia_transaccion" name="referencia_transaccion" value="{{ $transaccion->referencia_transaccion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="descripcion_transaccion" class="form-label">descripcion_transaccion</label>
+                            <input type="text" class="form-control" id="descripcion_transaccion" name="descripcion_transaccion" value="{{ $transaccion->descripcion_transaccion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="email_beneficiario" class="form-label">email_beneficiario</label>
+                            <input type="email" class="form-control" id="email_beneficiario" name="email_beneficiario" value="{{ $transaccion->email_beneficiario }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="tipo_identificacion" class="form-label">tipo_identificacion</label>
+                            <input type="text" class="form-control" id="tipo_identificacion" name="tipo_identificacion" value="{{ $transaccion->tipo_identificacion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="numero_identificacion" class="form-label">numero_identificacion</label>
+                            <input type="text" class="form-control" id="numero_identificacion" name="numero_identificacion" value="{{ $transaccion->numero_identificacion }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="status_report" class="form-label">status_report</label>
+                            <select class="form-select" id="status_report" name="status_report" required>
+                                @foreach ($transaccionStatus as $item)
+                                    <option value="{{$item}}" {{  $transaccion->status_report == $item ? 'selected' : '' }}>{{$item}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="date_trasaction" class="form-label">date_trasaction</label>
+                            <input type="date" class="form-control" id="date_trasaction" name="date_trasaction" value="{{ $transaccion->date_trasaction }}">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="transacctionid" class="form-label">transacctionid</label>
+                            <input type="text" class="form-control" id="transacctionid" name="transacctionid" value="{{ $transaccion->transacctionid }}">
+                        </div>
+                    </div>
                     
                         <div class="text-center pt-3">
+                            <a href="{{route('transaccion.index')}}" class="btn btn-dark">Cancelar</a>
+
                             <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                         </div>
                     </form>

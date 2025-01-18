@@ -101,9 +101,10 @@
                         "schema": {
                             "type": "string",
                             "enum": [
-                                "procesada",
-                                "rechazada",
-                                "en proceso"
+                                "PROCESSED",
+                                "REJECTED",
+                                "SENT",
+                                "PENDING"
                             ]
                         }
                     }

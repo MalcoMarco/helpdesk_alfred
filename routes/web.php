@@ -96,7 +96,6 @@ Route::prefix('dashboard')->group(function () {
         ->middleware('auth');
 
         Route::prefix('transacciones')->middleware('auth')->group(function(){
-        Route::get('modelo2', [DatatransaccionController::class, 'indexPage'])->name('transaccion.modelo2.index');
         
         Route::get('', [TransaccionController::class, 'index'])->name('transaccion.index');
 

@@ -29,11 +29,7 @@ class TransaccionController extends Controller
             return $next($request);
         })->except('indexApi', 'storeApi');        
     }
-    public $transaccionStatus = [
-        1 => 'En Proceso',
-        2 => 'Procesado',
-        3 => 'Rechazado',
-    ];
+    public $transaccionStatus = ['PROCESSED', 'REJECTED', 'SENT','PENDING'];
 
     public function index(Request $request)
     {
@@ -45,7 +41,7 @@ class TransaccionController extends Controller
             'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
-            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
+            'status' => ['nullable', Rule::in($this->transaccionStatus)],
         ]);
 
         $transaccions = Datatransaccion::orderBy('id');
@@ -139,7 +135,7 @@ class TransaccionController extends Controller
             'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
-            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
+            'status' => ['nullable', Rule::in($this->transaccionStatus)],
             'type_file' => ['required', Rule::in(['xlsx', 'pdf'])],
             'email_to'=> ['nullable', 'string', 'email'],
         ]);
@@ -291,21 +287,25 @@ class TransaccionController extends Controller
         return view('transaccions.edit', compact('transaccion', 'transaccionStatus'));
     }
 
-    public function update(Request $request, Transaccion $transaccion)
+    public function update(Request $request, Datatransaccion $transaccion)
     {
         $this->validate($request, [
-            'codigo_banco' => ['required', 'string', 'max:255'],//codigo_banco
-            'num_cuenta' => ['required', 'regex:/^\d{1,34}$/'], //num_cuenta
-            'num_ident' => ['required', 'alpha_num:ascii', 'max:30'], //num_ident
-            'tipo_ident' => ['required', Rule::in(['C', 'P'])], //tipo_ident
-            'nombre_cliente' => ['required', 'string', 'max:100'], //nombre_cliente
-            'valor' => ['required', 'regex:/^\d{1,15}(\.\d{1,2})?$/'], //valor: hasta 15 digitos con 2 decimales
-            'email' => ['nullable', 'string', 'regex:/^([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})(;[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4})*$/'], //email
-            'id' => ['required', 'integer'],
-            'fecha' => ['required', 'date_format:Y-m-d'], // fecha
-            'status' => ['required', Rule::in(['PROCESSED', 'REJECTED', 'SENT'])],//status
+            'withdrawid' => ['required', 'string'],
+            'no_cuenta' => ['required', 'string'],
+            'codigo_banco' => ['required', 'string'],
+            'tipo_cuenta' => ['required', 'string'],
+            'nombre_cliente' => ['nullable', 'string'],
+            'tipo_movimiento' => ['nullable', 'string'],
+            'valor_transaccion' => ['required', 'numeric'],
+            'referencia_transaccion' => ['nullable', 'string'],
+            'descripcion_transaccion' => ['nullable', 'string'],
+            'email_beneficiario' => ['nullable', 'string', 'email'],
+            'tipo_identificacion' => ['nullable','string'],
+            'numero_identificacion' => ['nullable', 'string'],
+            'status_report' => ['required', Rule::in($this->transaccionStatus)],
+            'date_trasaction' => ['required', 'date_format:Y-m-d'],
+            'transacctionid' => ['required', 'string'],
         ]);
-        $transaccion->update(['id_t' => $request->id]);
         $transaccion->update($request->except(['_token', '_method']));
         return redirect()->route('transaccion.index')->with('success', 'Transacción actualizada correctamente');
     }
@@ -382,7 +382,7 @@ class TransaccionController extends Controller
      *         in="query",
      *         description="Estado de la transacción: 'procesada', 'rechazada' o 'en proceso' (filtro opcional)",
      *         required=false,
-     *         @OA\Schema(type="string", enum={"procesada", "rechazada", "en proceso"})
+     *         @OA\Schema(type="string", enum={"PROCESSED", "REJECTED", "SENT","PENDING"})
      *     ),
      *     @OA\Response(
      *         response=200,
@@ -426,7 +426,7 @@ class TransaccionController extends Controller
             'tipo_identificacion' => ['nullable', Rule::in(['P', 'C'])],
             'fecha_desde' => 'nullable|date_format:Y-m-d',
             'fecha_hasta' => 'nullable|date_format:Y-m-d|after_or_equal:fecha_desde',
-            'status' => ['nullable', Rule::in(['procesada', 'rechazada', 'en proceso'])],
+            'status' => ['nullable', Rule::in($this->transaccionStatus)],
         ]);
 
         $transaccions = Datatransaccion::select('codigo_banco', 'no_cuenta', 'numero_identificacion', 'tipo_identificacion', 'nombre_cliente', 'valor_transaccion', 'email_beneficiario', 'transacctionid', 'status_report', 'date_trasaction', 'created_at')->where('id', '>=', 1)->orderBy('id');
@@ -480,18 +480,7 @@ class TransaccionController extends Controller
         }
         
         if (isset($request->status)) {
-            $status = "";
-            switch ($request->status) {
-                case 'procesada':
-                    $status = "PROCESSED";
-                    break;
-                case 'rechazada':
-                    $status = "REJECTED";
-                    break;
-                case 'en proceso':
-                    $status = "PENDING";
-                    break;
-            }
+            $status = $request->status;
             $transaccions = $transaccions->where(function($q) use($status){
                 $q->orWhere('status_report', $status);
             });

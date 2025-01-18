@@ -98,9 +98,9 @@
                     <div class="form-floating me-2 mb-1">
                         <select class="form-select" id="status" name="status" aria-label="Floating label select example" style="min-width: 200px;">
                             <option value="" {{request('status') ? '' : 'selected'}}>-Ninguno-</option>
-                            <option value="en proceso" {{request('status')=='en proceso' ? 'selected' : ''}}>En proceso</option>
-                            <option value="procesada" {{request('status')=='procesada' ? 'selected' : ''}}>Procesada</option>
-                            <option value="rechazada" {{request('status')=='rechazada' ? 'selected' : ''}}>Rechazada</option>
+                            @foreach ($transaccionStatus as $item)
+                                <option value="{{$item}}" {{request('status')==$item ? 'selected' : ''}}>{{$item}}</option>
+                            @endforeach
                         </select>
                         <label for="status">Status</label>
                     </div>
@@ -220,10 +220,12 @@
                                 <svg style="width: 15px; height: 15px;" fill="currentcolor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 512"><path d="M64 360a56 56 0 1 0 0 112 56 56 0 1 0 0-112zm0-160a56 56 0 1 0 0 112 56 56 0 1 0 0-112zM120 96A56 56 0 1 0 8 96a56 56 0 1 0 112 0z"/></svg>
                             </button>
                             <ul class="dropdown-menu">
-                                {{-- <li><a href="{{route('transaccion.edit',$t->id)}}" class="dropdown-item">Editar</a></li> --}}
+                                <li>
+                                    <a href="{{route('transaccion.edit',$t->id)}}" class="dropdown-item text-success">Editar</a>
+                                </li>
 
                                 <li>
-                                    <button class="dropdown-item" type="button" onclick="confirmDelete(this);">Eliminar</button>
+                                    <button class="dropdown-item text-danger" type="button" onclick="confirmDelete(this);">Eliminar</button>
                                     <form action="{{ route('transaccion.destroy', $t->id) }}" method="POST" style="display: none;">
                                         @csrf
                                         @method('DELETE')

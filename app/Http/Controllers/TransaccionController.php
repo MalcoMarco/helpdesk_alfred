@@ -310,7 +310,16 @@ class TransaccionController extends Controller
         return redirect()->route('transaccion.index')->with('success', 'Transacción actualizada correctamente');
     }
 
-
+    function updatestatus(Request $request) {
+        $this->validate($request, [
+            'transaccionIds' => ['required', 'array'],
+            //'transaccionIds.*' => ['integer', 'exists:datatransaccions,id'],
+            'status_report' => ['required', Rule::in($this->transaccionStatus)],
+        ]);
+        //actualizar todos los registros con los ids enviados
+        Datatransaccion::whereIn('id', $request->transaccionIds)->update(['status_report' => $request->status_report]);
+        return response()->json(['message' => 'Transacciones actualizadas correctamente']);
+    }
 
     /**********************APIII********************/
 

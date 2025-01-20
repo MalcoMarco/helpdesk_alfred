@@ -56,7 +56,7 @@
         @endif
     </div> 
    
-    <div>
+    <div class="mb-2">
         <p class="d-inline-flex gap-1">
         <a class="btn-link btn-success text-decoration-none" data-bs-toggle="collapse" href="#collapseFilter" role="button" aria-expanded="false" aria-controls="collapseFilter">
             Filtros: <svg style="width: 15px; height: 15px;" fill="currentcolor"  xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"/></svg>
@@ -170,11 +170,24 @@
         </div>
     </div>
 
-    <div class="w-100 table-responsive mb-4" style="font-size: 14px;">
+    <div style="height: 43px;">
+        <div id="dd-btnseleccion" class="dropdown mb-2 d-none">
+            <button class="btn btn-dark dropdown-toggle" type="button" id="dropdownMenuButton1" data-bs-toggle="dropdown" aria-expanded="false">
+              seleccionados : <span id="selectedCount"></span>
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton1">
+                <li><span class="dropdown-item-text fw-lighter">Cambiar status_report a:</span></li>
+                @foreach ($transaccionStatus as $item)
+                    <li><button onclick="changeStatusReport('{{$item}}')" class="dropdown-item"><span class="fw-normal">{{$item}}</span></button></li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+    <div class="w-100 table-responsive mb-4" style="font-size: 12px;">
         <table class="table table-bordered table-sm table-striped align-middle">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th><input type="checkbox" id="selectAll"> #</th>
                     <th>withdrawid</th>
                     <th>no_cuenta</th>
                     <th>codigo_banco</th>
@@ -197,7 +210,15 @@
             <tbody class="table-group-divider text-center">
                 @foreach($transaccions as $key => $t)
                 <tr>
-                    <td>{{$transaccions->firstItem() + $key}}</td>
+                    <td>
+                        <div class="form-check">
+                            <input class="form-check-input row-checkbox" type="checkbox" data-id="{{$t->id}}" id="cb-{{$t->id}}">
+                            <label class="form-check-label" for="cb-{{$t->id}}">
+                              {{$transaccions->firstItem() + $key}}
+                            </label>
+                          </div>
+
+                    </td>
                     <td>{{$t->withdrawid}}</td>
                     <td>{{$t->no_cuenta}}</td>
                     <td>{{$t->codigo_banco}}</td>
@@ -239,8 +260,7 @@
             </tbody>
         </table>
     </div>
-
-    <div class="d-flex justify-content-center">
+    <div class="d-flex justify-content-between pagination">
         {{ $transaccions->links('pagination::bootstrap-5') }}
     </div> 
 </div>
@@ -252,5 +272,80 @@
             button.nextElementSibling.submit();
         }
     }
+
+    // Array para almacenar los IDs seleccionados
+    let selectedIds = [];
+    const selectedCount = document.getElementById('selectedCount'); // Contador de filas seleccionadas
+
+    // Función para actualizar el contador
+    function updateSelectedCount() {
+        selectedCount.textContent = `${selectedIds.length}`;
+        if (selectedIds.length > 0) {
+            document.getElementById('dd-btnseleccion').classList.remove('d-none');
+        } else {
+            document.getElementById('dd-btnseleccion').classList.add('d-none');
+        }
+    }
+    // Seleccionar o deseleccionar todos los checkboxes
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        selectedIds = [];
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = this.checked;
+            if (this.checked) {
+                selectedIds.push(checkbox.getAttribute('data-id'));
+            }
+        });
+        updateSelectedCount();
+    });
+
+    // Manejar clics en checkboxes individuales
+    document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function () {
+            const id = this.getAttribute('data-id');
+            if (this.checked) {
+                selectedIds.push(id);
+            } else {
+                selectedIds = selectedIds.filter(item => item !== id);
+                document.getElementById('selectAll').checked = false;
+            }
+            updateSelectedCount();
+        });
+    });
+
+    // Enviar la selección
+    function changeStatusReport(status) {
+        console.log(status);
+        console.log(selectedIds); // Imprimir los IDs seleccionados en la consola
+        if (selectedIds.length > 0) {
+            fetch("{{route('transaccion.updatestatus')}}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    transaccionIds: selectedIds,
+                    status_report:status,
+                    _token: "{{ csrf_token() }}",
+                    _method: 'POST'
+                }),
+            })
+            .then(response => response.json())
+            .then((data) => {
+                console.log('Respuesta del servidor:', data)
+                window.location.reload();
+            })
+            .catch(error => console.error('Error:', error));
+        } else {
+            alert('Por favor, selecciona al menos un elemento.');
+        }
+    }
+    window.onload = function() {
+        // Asegurarse de que los checkboxes estén desmarcados al cargar la página
+        var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(function(checkbox) {
+            checkbox.checked = false;
+        });
+    };
 </script>
 @endsection

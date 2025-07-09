@@ -97,19 +97,19 @@ Route::prefix('dashboard')->group(function () {
 
         Route::prefix('transacciones')->middleware('auth')->group(function(){
         
-        Route::get('', [TransaccionController::class, 'index'])->name('transaccion.index');
+            Route::get('', [TransaccionController::class, 'index'])->name('transaccion.index');
 
-        Route::post('store', [TransaccionController::class, 'store'])->name('transaccion.store');
-        Route::get('download', [TransaccionController::class, 'download'])->name('transaccion.download');
+            Route::post('store', [TransaccionController::class, 'store'])->name('transaccion.store');
+            Route::get('download', [TransaccionController::class, 'download'])->name('transaccion.download');
 
-        Route::put('update/{transaccion}', [TransaccionController::class, 'update'])->name('transaccion.update');
-        Route::post('update-status', [TransaccionController::class, 'updatestatus'])->name('transaccion.updatestatus');
-        
-        Route::get('{transaccion}',[TransaccionController::class, 'edit'])->name('transaccion.edit');
-        Route::delete('{transaccion}', [TransaccionController::class, 'destroy'])->name('transaccion.destroy');
+            Route::put('update/{transaccion}', [TransaccionController::class, 'update'])->name('transaccion.update');
+            Route::post('update-status', [TransaccionController::class, 'updatestatus'])->name('transaccion.updatestatus');
+            
+            Route::get('{transaccion}',[TransaccionController::class, 'edit'])->name('transaccion.edit');
+            Route::delete('{transaccion}', [TransaccionController::class, 'destroy'])->name('transaccion.destroy');
 
-        
-    });
+            
+        });
     
 
     /** Ticket Functions */

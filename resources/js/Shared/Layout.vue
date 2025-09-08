@@ -105,7 +105,7 @@
             <flash-messages />
               <div class="sec-cont h-[90%] flex flex-col">
                   <slot />
-                  <div class="mt-auto">
+                  <div class="mt-auto pt-4">
                     <TradingViewWidget />
                 </div>
               </div>

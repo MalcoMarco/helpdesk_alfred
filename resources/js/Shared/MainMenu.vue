@@ -15,6 +15,12 @@
             </Link>
         </div>
     </div>
+    <div class="menu-item">
+        <Link class="flex items-center group py-3 menu-link" :href="route('vault.evidencias')" >
+            <icon name="book" class="w-5 h-5 mr-3 rtl:ml-3 menu__icon" />
+            <div class="menu__name">{{ __('Evidencias') }}</div>
+        </Link>
+    </div>
     <div class="menu-item" v-if="user.role.slug === 'admin'">
         <a class="flex items-center group py-3 menu-link" href="/dashboard/transacciones" target="_blank">
             <div class="menu__name">Excel Transacciones</div>

@@ -40,6 +40,7 @@ use App\Http\Controllers\FrontPagesController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\EvidenciasController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InstallController;
 
@@ -110,7 +111,14 @@ Route::prefix('dashboard')->group(function () {
 
             
         });
+    // Vault de Evidencias
+    Route::get('vault/evidencias', [EvidenciasController::class, 'index'])
+        ->name('vault.evidencias')
+        ->middleware('auth');
     
+    Route::post('vault/evidencias', [EvidenciasController::class, 'store'])
+        ->name('evidencias.store')
+        ->middleware('auth');
 
     /** Ticket Functions */
     Route::get('tickets', [TicketsController::class, 'index'])
